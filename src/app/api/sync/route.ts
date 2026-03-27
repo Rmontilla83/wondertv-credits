@@ -1,8 +1,23 @@
 import { createClient as createAdminClient } from '@supabase/supabase-js'
-import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
+
+// Simple sync key for bookmarklet auth (since cookies aren't available cross-origin)
+const SYNC_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.slice(-16) ?? ''
+
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, X-Sync-Key',
+  }
+}
+
+// Handle CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders() })
+}
 
 interface FlujoAccount {
   cust_id: string
@@ -20,21 +35,16 @@ interface FlujoAccount {
 function parseRemark(remark: string): { name: string; phone: string | null; email: string | null } {
   if (!remark) return { name: 'Sin nombre', phone: null, email: null }
 
-  // Try to extract email
   const emailMatch = remark.match(/[\w.-]+@[\w.-]+\.\w+/i)
   const email = emailMatch ? emailMatch[0].replace(/([a-z])([A-Z])/g, '$1.$2').toLowerCase() : null
 
-  // Try to extract phone (various formats)
   const phoneMatch = remark.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/g)
   const phone = phoneMatch ? phoneMatch[0] : null
 
-  // Name is the remaining text after removing email and phone
   let name = remark
   if (email) name = name.replace(emailMatch![0], '')
   if (phone) name = name.replace(phone, '')
-  // Clean up the name
   name = name.replace(/[,.\-/|]+/g, ' ').replace(/\s+/g, ' ').trim()
-  // Remove common suffixes like "usa", "ve", country names at the end
   name = name.replace(/\b(usa|ve|es|cl|ca|ae|otro|otra|cuenta|amigo|amiga|de|prima|primo)\b\s*$/gi, '').trim()
 
   if (!name) name = remark.substring(0, 50)
@@ -43,22 +53,13 @@ function parseRemark(remark: string): { name: string; phone: string | null; emai
 }
 
 export async function POST(request: NextRequest) {
-  // Verify the request comes from an authenticated admin/operator
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (!profile || !['admin', 'operator'].includes(profile.role)) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
+  // Verify sync key
+  const syncKey = request.headers.get('x-sync-key')
+  if (!syncKey || syncKey !== SYNC_KEY) {
+    return NextResponse.json(
+      { error: 'No autorizado' },
+      { status: 403, headers: corsHeaders() }
+    )
   }
 
   const body = await request.json()
@@ -66,7 +67,10 @@ export async function POST(request: NextRequest) {
   const dashboardData = body.dashboard
 
   if (!accounts || !Array.isArray(accounts)) {
-    return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'Datos inválidos' },
+      { status: 400, headers: corsHeaders() }
+    )
   }
 
   const adminClient = createAdminClient(
@@ -82,7 +86,6 @@ export async function POST(request: NextRequest) {
     const { name, phone, email } = parseRemark(account.remark)
     const status = account.status === '1' ? 'active' : 'inactive'
 
-    // Check if client already exists by flujo_cust_id
     const { data: existing } = await adminClient
       .from('clients')
       .select('id')
@@ -90,7 +93,6 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (existing) {
-      // Update existing client
       const { error } = await adminClient
         .from('clients')
         .update({
@@ -115,7 +117,6 @@ export async function POST(request: NextRequest) {
         updated++
       }
     } else {
-      // Create new client
       const { error } = await adminClient
         .from('clients')
         .insert({
@@ -130,7 +131,6 @@ export async function POST(request: NextRequest) {
           flujo_start_date: account.start_date,
           flujo_end_date: account.end_date,
           flujo_credits: account.credit,
-          created_by: user.id,
           notes: account.remark,
         })
 
@@ -143,12 +143,15 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({
-    success: true,
-    created,
-    updated,
-    errors,
-    total: accounts.length,
-    dashboard: dashboardData ?? null,
-  })
+  return NextResponse.json(
+    {
+      success: true,
+      created,
+      updated,
+      errors,
+      total: accounts.length,
+      dashboard: dashboardData ?? null,
+    },
+    { headers: corsHeaders() }
+  )
 }
