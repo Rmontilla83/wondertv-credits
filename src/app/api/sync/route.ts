@@ -53,9 +53,12 @@ function parseRemark(remark: string): { name: string; phone: string | null; emai
 }
 
 export async function POST(request: NextRequest) {
-  // Verify sync key
+  // Auth: either sync key (cross-origin bookmarklet) or same-origin session cookie
   const syncKey = request.headers.get('x-sync-key')
-  if (!syncKey || syncKey !== SYNC_KEY) {
+  const isSameOrigin = request.headers.get('origin') === null ||
+    request.headers.get('origin') === request.nextUrl.origin
+
+  if (!isSameOrigin && (!syncKey || syncKey !== SYNC_KEY)) {
     return NextResponse.json(
       { error: 'No autorizado' },
       { status: 403, headers: corsHeaders() }
