@@ -101,6 +101,9 @@ export async function POST(request: NextRequest) {
           flujo_login: account.login_name,
           country: account.country,
           device_info: `${account.login_name} / ${account.password}`,
+          flujo_start_date: account.start_date,
+          flujo_end_date: account.end_date,
+          flujo_credits: account.credit,
           updated_at: new Date().toISOString(),
         })
         .eq('id', existing.id)
@@ -124,6 +127,9 @@ export async function POST(request: NextRequest) {
           flujo_login: account.login_name,
           country: account.country,
           device_info: `${account.login_name} / ${account.password}`,
+          flujo_start_date: account.start_date,
+          flujo_end_date: account.end_date,
+          flujo_credits: account.credit,
           created_by: user.id,
           notes: account.remark,
         })

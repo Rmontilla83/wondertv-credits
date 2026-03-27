@@ -8,10 +8,11 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart'
 import { ProfitabilityChart } from '@/components/dashboard/ProfitabilityChart'
 import { PaymentMethodPie } from '@/components/dashboard/PaymentMethodPie'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
+import { ExpiringClients } from '@/components/dashboard/ExpiringClients'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatUSD, formatBSS } from '@/lib/utils'
-import type { CreditBalance, MonthlyProfitability, MonthlyFinancialSummary, CreditAssignment } from '@/lib/types'
+import type { CreditBalance, MonthlyProfitability, MonthlyFinancialSummary, CreditAssignment, Client } from '@/lib/types'
 import {
   CircleDollarSign,
   Package,
@@ -30,6 +31,7 @@ export default function DashboardPage() {
   const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary[]>([])
   const [recentAssignments, setRecentAssignments] = useState<CreditAssignment[]>([])
   const [paymentMethods, setPaymentMethods] = useState<{ method: string; total: number }[]>([])
+  const [allClients, setAllClients] = useState<Client[]>([])
   const [allAssignments, setAllAssignments] = useState<{
     payment_method: string | null
     payment_amount_usd: number | null
@@ -44,7 +46,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [balanceRes, profitRes, summaryRes, recentRes, allRes] = await Promise.all([
+        const [balanceRes, profitRes, summaryRes, recentRes, allRes, clientsRes] = await Promise.all([
           supabase.from('credit_balance').select('*').maybeSingle(),
           supabase.from('monthly_profitability').select('*').limit(12),
           supabase.from('monthly_financial_summary').select('*').limit(12),
@@ -56,6 +58,9 @@ export default function DashboardPage() {
           supabase
             .from('credit_assignments')
             .select('payment_method, payment_amount_usd, payment_amount_bss, is_courtesy, quantity, created_at'),
+          supabase
+            .from('clients')
+            .select('id, name, status, flujo_login, flujo_end_date, country'),
         ])
 
         if (balanceRes.data) setBalance(balanceRes.data)
@@ -63,6 +68,7 @@ export default function DashboardPage() {
         if (summaryRes.data) setMonthlySummary(summaryRes.data)
         if (recentRes.data) setRecentAssignments(recentRes.data)
         if (allRes.data) setAllAssignments(allRes.data)
+        if (clientsRes.data) setAllClients(clientsRes.data as Client[])
 
         // Payment method totals
         if (allRes.data) {
@@ -232,6 +238,8 @@ export default function DashboardPage() {
         <ProfitabilityChart data={profitability} />
         <PaymentMethodPie data={paymentMethods} />
       </div>
+
+      <ExpiringClients clients={allClients} />
 
       <RecentActivity assignments={recentAssignments} />
     </div>

@@ -38,6 +38,9 @@ export interface Client {
   flujo_cust_id: string | null
   flujo_login: string | null
   country: string | null
+  flujo_end_date: string | null
+  flujo_start_date: string | null
+  flujo_credits: number | null
   created_at: string
   updated_at: string
 }
