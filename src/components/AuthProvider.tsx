@@ -1,9 +1,9 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
+import { createBrowserClient } from '@supabase/ssr'
 import type { Profile } from '@/lib/types'
-import type { User } from '@supabase/supabase-js'
+import type { User, SupabaseClient } from '@supabase/supabase-js'
 
 interface AuthContextType {
   user: User | null
@@ -25,53 +25,62 @@ export function useAuth() {
   return useContext(AuthContext)
 }
 
+// Single shared client instance
+let sharedClient: SupabaseClient | null = null
+function getSupabase() {
+  if (!sharedClient) {
+    sharedClient = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  return sharedClient
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = useMemo(() => createClient(), [])
+  const initialized = useRef(false)
 
-  const fetchProfile = async (userId: string) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      setProfile(data)
-    } catch {
-      setProfile(null)
-    }
-  }
+  const fetchProfile = useCallback(async (userId: string) => {
+    const supabase = getSupabase()
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+    return data as Profile | null
+  }, [])
 
   useEffect(() => {
-    let mounted = true
+    if (initialized.current) return
+    initialized.current = true
 
-    const getUser = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!mounted) return
-        setUser(user)
-        if (user) {
-          await fetchProfile(user.id)
-        }
-      } catch {
-        // Not authenticated
-      } finally {
-        if (mounted) setLoading(false)
+    const supabase = getSupabase()
+
+    // Initial session check
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      const currentUser = session?.user ?? null
+      setUser(currentUser)
+      if (currentUser) {
+        const p = await fetchProfile(currentUser.id)
+        setProfile(p)
       }
-    }
+      setLoading(false)
+    }).catch(() => {
+      setLoading(false)
+    })
 
-    getUser()
-
+    // Listen for auth changes (login/logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (!mounted) return
+      async (event, session) => {
         const currentUser = session?.user ?? null
         setUser(currentUser)
-        if (currentUser) {
-          await fetchProfile(currentUser.id)
-        } else {
+        if (currentUser && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+          const p = await fetchProfile(currentUser.id)
+          setProfile(p)
+        } else if (!currentUser) {
           setProfile(null)
         }
         setLoading(false)
@@ -79,20 +88,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => {
-      mounted = false
       subscription.unsubscribe()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [supabase])
+  }, [fetchProfile])
 
   const signOut = async () => {
+    const supabase = getSupabase()
     await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
   }
 
   const refreshProfile = async () => {
-    if (user) await fetchProfile(user.id)
+    if (user) {
+      const p = await fetchProfile(user.id)
+      setProfile(p)
+    }
   }
 
   return (
