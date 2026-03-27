@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
@@ -30,58 +30,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const loadProfile = useCallback(async (userId: string) => {
-    const supabase = createClient()
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single()
-
-    console.log('[Auth] Profile fetch:', { data, error: error?.message })
-
-    if (data) {
-      setProfile(data)
-    } else {
-      console.error('[Auth] Profile error:', error?.message, error?.code)
-      setProfile(null)
-    }
-  }, [])
-
+  // Effect 1: Listen to auth state changes (ONLY set user, no async DB calls)
   useEffect(() => {
     const supabase = createClient()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[Auth] Event:', event, session?.user?.email ?? 'no user')
-        const currentUser = session?.user ?? null
-        setUser(currentUser)
-
-        if (currentUser) {
-          await loadProfile(currentUser.id)
-        } else {
+      (_event, session) => {
+        console.log('[Auth]', _event, session?.user?.email ?? 'no user')
+        setUser(session?.user ?? null)
+        if (!session?.user) {
           setProfile(null)
+          setLoading(false)
         }
-
-        setLoading(false)
       }
     )
 
     return () => {
       subscription.unsubscribe()
     }
-  }, [loadProfile])
+  }, [])
 
-  const signOut = useCallback(async () => {
-    await createClient().auth.signOut()
+  // Effect 2: When user changes, fetch profile SEPARATELY (not inside onAuthStateChange)
+  useEffect(() => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+    const supabase = createClient()
+
+    console.log('[Auth] Fetching profile for', user.email)
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+      .then(({ data, error }) => {
+        if (cancelled) return
+        console.log('[Auth] Profile result:', data?.role ?? 'null', error?.message ?? 'ok')
+        setProfile(data ?? null)
+        setLoading(false)
+      })
+
+    return () => { cancelled = true }
+  }, [user])
+
+  const signOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
     setUser(null)
     setProfile(null)
     window.location.href = '/login'
-  }, [])
+  }
 
-  const refreshProfile = useCallback(async () => {
-    if (user) await loadProfile(user.id)
-  }, [user, loadProfile])
+  const refreshProfile = async () => {
+    if (!user) return
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user.id)
+      .single()
+    if (data) setProfile(data)
+  }
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, signOut, refreshProfile }}>
