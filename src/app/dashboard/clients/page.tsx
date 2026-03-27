@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { ClientsTable } from '@/components/tables/ClientsTable'
@@ -14,42 +14,48 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<(Client & { total_credits?: number; last_assignment?: string })[]>([])
   const [search, setSearch] = useState('')
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
-      const { data: clientsData } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name')
+      try {
+        const { data: clientsData } = await supabase
+          .from('clients')
+          .select('*')
+          .order('name')
 
-      if (clientsData) {
-        // Fetch credit totals per client
-        const { data: creditData } = await supabase
-          .from('credit_assignments')
-          .select('client_id, quantity, created_at')
+        if (clientsData) {
+          // Fetch credit totals per client
+          const { data: creditData } = await supabase
+            .from('credit_assignments')
+            .select('client_id, quantity, created_at')
 
-        const creditMap: Record<string, { total: number; last: string }> = {}
-        creditData?.forEach((a) => {
-          if (!creditMap[a.client_id]) {
-            creditMap[a.client_id] = { total: 0, last: '' }
-          }
-          creditMap[a.client_id].total += a.quantity
-          if (a.created_at > (creditMap[a.client_id].last || '')) {
-            creditMap[a.client_id].last = a.created_at
-          }
-        })
+          const creditMap: Record<string, { total: number; last: string }> = {}
+          creditData?.forEach((a) => {
+            if (!creditMap[a.client_id]) {
+              creditMap[a.client_id] = { total: 0, last: '' }
+            }
+            creditMap[a.client_id].total += a.quantity
+            if (a.created_at > (creditMap[a.client_id].last || '')) {
+              creditMap[a.client_id].last = a.created_at
+            }
+          })
 
-        setClients(clientsData.map((c) => ({
-          ...c,
-          total_credits: creditMap[c.id]?.total ?? 0,
-          last_assignment: creditMap[c.id]?.last ?? '',
-        })))
+          setClients(clientsData.map((c) => ({
+            ...c,
+            total_credits: creditMap[c.id]?.total ?? 0,
+            last_assignment: creditMap[c.id]?.last ?? '',
+          })))
+        }
+      } catch (error) {
+        console.error('Error fetching clients data:', error)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   const filteredClients = clients.filter((c) =>

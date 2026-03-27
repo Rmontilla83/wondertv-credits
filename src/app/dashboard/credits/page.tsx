@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/AuthProvider'
@@ -16,24 +16,30 @@ export default function CreditsPage() {
   const [balance, setBalance] = useState<CreditBalance | null>(null)
   const [purchases, setPurchases] = useState<CreditPurchase[]>([])
   const { profile } = useAuth()
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
-      const [balanceRes, purchasesRes] = await Promise.all([
-        supabase.from('credit_balance').select('*').single(),
-        supabase
-          .from('credit_purchases')
-          .select('*, profiles(full_name)')
-          .order('purchased_at', { ascending: false }),
-      ])
+      try {
+        const [balanceRes, purchasesRes] = await Promise.all([
+          supabase.from('credit_balance').select('*').maybeSingle(),
+          supabase
+            .from('credit_purchases')
+            .select('*, profiles(full_name)')
+            .order('purchased_at', { ascending: false }),
+        ])
 
-      if (balanceRes.data) setBalance(balanceRes.data)
-      if (purchasesRes.data) setPurchases(purchasesRes.data)
-      setLoading(false)
+        if (balanceRes.data) setBalance(balanceRes.data)
+        if (purchasesRes.data) setPurchases(purchasesRes.data)
+      } catch (error) {
+        console.error('Error fetching credits data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   if (loading) {

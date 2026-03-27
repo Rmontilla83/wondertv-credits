@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { AssignmentsTable } from '@/components/tables/AssignmentsTable'
@@ -19,20 +19,26 @@ export default function AssignmentsPage() {
   const [methodFilter, setMethodFilter] = useState('all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
-      const { data } = await supabase
-        .from('credit_assignments')
-        .select('*, clients(name), profiles(full_name)')
-        .order('created_at', { ascending: false })
+      try {
+        const { data } = await supabase
+          .from('credit_assignments')
+          .select('*, clients(name), profiles(full_name)')
+          .order('created_at', { ascending: false })
 
-      if (data) setAssignments(data)
-      setLoading(false)
+        if (data) setAssignments(data)
+      } catch (error) {
+        console.error('Error fetching assignments data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   const filtered = assignments.filter((a) => {

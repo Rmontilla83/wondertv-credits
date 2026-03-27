@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -26,27 +26,33 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<Client | null>(null)
   const [assignments, setAssignments] = useState<CreditAssignment[]>([])
   const [editing, setEditing] = useState(false)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const clientId = params.id as string
 
   useEffect(() => {
     async function fetchData() {
-      const [clientRes, assignmentsRes] = await Promise.all([
-        supabase.from('clients').select('*').eq('id', clientId).single(),
-        supabase
-          .from('credit_assignments')
-          .select('*, profiles(full_name)')
-          .eq('client_id', clientId)
-          .order('created_at', { ascending: false }),
-      ])
+      try {
+        const [clientRes, assignmentsRes] = await Promise.all([
+          supabase.from('clients').select('*').eq('id', clientId).single(),
+          supabase
+            .from('credit_assignments')
+            .select('*, profiles(full_name)')
+            .eq('client_id', clientId)
+            .order('created_at', { ascending: false }),
+        ])
 
-      if (clientRes.data) setClient(clientRes.data)
-      if (assignmentsRes.data) setAssignments(assignmentsRes.data)
-      setLoading(false)
+        if (clientRes.data) setClient(clientRes.data)
+        if (assignmentsRes.data) setAssignments(assignmentsRes.data)
+      } catch (error) {
+        console.error('Error fetching client detail data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, clientId])
 
   if (loading) {

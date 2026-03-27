@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/AuthProvider'
 import { Button } from '@/components/ui/button'
@@ -64,7 +64,7 @@ export default function SettingsPage() {
   const [newRate, setNewRate] = useState('')
   const [savingRate, setSavingRate] = useState(false)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   const fetchUsers = useCallback(async () => {
     const res = await fetch('/api/users')
@@ -76,19 +76,25 @@ export default function SettingsPage() {
 
   useEffect(() => {
     async function fetchData() {
-      await fetchUsers()
+      try {
+        await fetchUsers()
 
-      const { data: ratesData } = await supabase
-        .from('exchange_rates')
-        .select('*')
-        .order('recorded_at', { ascending: false })
-        .limit(10)
+        const { data: ratesData } = await supabase
+          .from('exchange_rates')
+          .select('*')
+          .order('recorded_at', { ascending: false })
+          .limit(10)
 
-      if (ratesData) setRates(ratesData)
-      setLoading(false)
+        if (ratesData) setRates(ratesData)
+      } catch (error) {
+        console.error('Error fetching settings data:', error)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase, fetchUsers])
 
   if (profile?.role !== 'admin') {

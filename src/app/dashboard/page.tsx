@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { CreditGauge } from '@/components/dashboard/CreditGauge'
@@ -28,20 +28,21 @@ export default function DashboardPage() {
   const [recentAssignments, setRecentAssignments] = useState<CreditAssignment[]>([])
   const [paymentMethods, setPaymentMethods] = useState<{ method: string; total: number }[]>([])
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
-      const [balanceRes, profitRes, summaryRes, assignmentsRes] = await Promise.all([
-        supabase.from('credit_balance').select('*').single(),
-        supabase.from('monthly_profitability').select('*').limit(12),
-        supabase.from('monthly_financial_summary').select('*').limit(12),
-        supabase
-          .from('credit_assignments')
-          .select('*, clients(name), profiles(full_name)')
-          .order('created_at', { ascending: false })
-          .limit(10),
-      ])
+      try {
+        const [balanceRes, profitRes, summaryRes, assignmentsRes] = await Promise.all([
+          supabase.from('credit_balance').select('*').maybeSingle(),
+          supabase.from('monthly_profitability').select('*').limit(12),
+          supabase.from('monthly_financial_summary').select('*').limit(12),
+          supabase
+            .from('credit_assignments')
+            .select('*, clients(name), profiles(full_name)')
+            .order('created_at', { ascending: false })
+            .limit(10),
+        ])
 
       if (balanceRes.data) setBalance(balanceRes.data)
       if (profitRes.data) setProfitability(profitRes.data)
@@ -59,10 +60,15 @@ export default function DashboardPage() {
         setPaymentMethods(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
       }
 
-      setLoading(false)
+      } catch (err) {
+        console.error('Dashboard fetch error:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   const currentMonth = monthlySummary[0]

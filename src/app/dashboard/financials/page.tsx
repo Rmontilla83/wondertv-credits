@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { KPICard } from '@/components/dashboard/KPICard'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,60 +33,65 @@ export default function FinancialsPage() {
   const [burnRateDays, setBurnRateDays] = useState<number | null>(null)
   const [reorderDate, setReorderDate] = useState<string | null>(null)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
-      const [profitRes, balanceRes, purchasesRes, assignmentsRes] = await Promise.all([
-        supabase.from('monthly_profitability').select('*').limit(24),
-        supabase.from('credit_balance').select('*').single(),
-        supabase.from('credit_purchases').select('quantity, total_cost_usd'),
-        supabase.from('credit_assignments').select('quantity, payment_amount_usd, payment_method, created_at'),
-      ])
+      try {
+        const [profitRes, balanceRes, purchasesRes, assignmentsRes] = await Promise.all([
+          supabase.from('monthly_profitability').select('*').limit(24),
+          supabase.from('credit_balance').select('*').maybeSingle(),
+          supabase.from('credit_purchases').select('quantity, total_cost_usd'),
+          supabase.from('credit_assignments').select('quantity, payment_amount_usd, payment_method, created_at'),
+        ])
 
-      if (profitRes.data) setProfitability(profitRes.data)
-      if (balanceRes.data) setBalance(balanceRes.data)
+        if (profitRes.data) setProfitability(profitRes.data)
+        if (balanceRes.data) setBalance(balanceRes.data)
 
-      // Calculate totals
-      const investment = purchasesRes.data?.reduce((s, p) => s + p.total_cost_usd, 0) ?? 0
-      const totalPurchased = purchasesRes.data?.reduce((s, p) => s + p.quantity, 0) ?? 0
-      setTotalInvestment(investment)
-      setAvgCostPerCredit(totalPurchased > 0 ? investment / totalPurchased : 0)
+        // Calculate totals
+        const investment = purchasesRes.data?.reduce((s, p) => s + p.total_cost_usd, 0) ?? 0
+        const totalPurchased = purchasesRes.data?.reduce((s, p) => s + p.quantity, 0) ?? 0
+        setTotalInvestment(investment)
+        setAvgCostPerCredit(totalPurchased > 0 ? investment / totalPurchased : 0)
 
-      const revenue = assignmentsRes.data?.reduce((s, a) => s + (a.payment_amount_usd ?? 0), 0) ?? 0
-      const creditsAssigned = assignmentsRes.data?.reduce((s, a) => s + a.quantity, 0) ?? 0
-      setTotalRevenue(revenue)
-      setTotalCreditsAssigned(creditsAssigned)
+        const revenue = assignmentsRes.data?.reduce((s, a) => s + (a.payment_amount_usd ?? 0), 0) ?? 0
+        const creditsAssigned = assignmentsRes.data?.reduce((s, a) => s + a.quantity, 0) ?? 0
+        setTotalRevenue(revenue)
+        setTotalCreditsAssigned(creditsAssigned)
 
-      // Payment method breakdown
-      const methodMap: Record<string, number> = {}
-      assignmentsRes.data?.forEach((a) => {
-        if (a.payment_method && a.payment_amount_usd) {
-          methodMap[a.payment_method] = (methodMap[a.payment_method] || 0) + a.payment_amount_usd
+        // Payment method breakdown
+        const methodMap: Record<string, number> = {}
+        assignmentsRes.data?.forEach((a) => {
+          if (a.payment_method && a.payment_amount_usd) {
+            methodMap[a.payment_method] = (methodMap[a.payment_method] || 0) + a.payment_amount_usd
+          }
+        })
+        setPaymentBreakdown(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
+
+        // Burn rate calculation
+        if (assignmentsRes.data && assignmentsRes.data.length > 1 && balanceRes.data) {
+          const sorted = [...assignmentsRes.data].sort((a, b) => a.created_at.localeCompare(b.created_at))
+          const firstDate = new Date(sorted[0].created_at)
+          const lastDate = new Date(sorted[sorted.length - 1].created_at)
+          const daySpan = differenceInDays(lastDate, firstDate) || 1
+          const dailyRate = creditsAssigned / daySpan
+          if (dailyRate > 0 && balanceRes.data.available_credits > 0) {
+            const daysLeft = Math.round(balanceRes.data.available_credits / dailyRate)
+            setBurnRateDays(daysLeft)
+            const reorder = new Date()
+            reorder.setDate(reorder.getDate() + Math.max(0, daysLeft - 7))
+            setReorderDate(format(reorder, 'dd/MM/yyyy'))
+          }
         }
-      })
-      setPaymentBreakdown(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
-
-      // Burn rate calculation
-      if (assignmentsRes.data && assignmentsRes.data.length > 1 && balanceRes.data) {
-        const sorted = [...assignmentsRes.data].sort((a, b) => a.created_at.localeCompare(b.created_at))
-        const firstDate = new Date(sorted[0].created_at)
-        const lastDate = new Date(sorted[sorted.length - 1].created_at)
-        const daySpan = differenceInDays(lastDate, firstDate) || 1
-        const dailyRate = creditsAssigned / daySpan
-        if (dailyRate > 0 && balanceRes.data.available_credits > 0) {
-          const daysLeft = Math.round(balanceRes.data.available_credits / dailyRate)
-          setBurnRateDays(daysLeft)
-          const reorder = new Date()
-          reorder.setDate(reorder.getDate() + Math.max(0, daysLeft - 7))
-          setReorderDate(format(reorder, 'dd/MM/yyyy'))
-        }
+      } catch (error) {
+        console.error('Error fetching financials data:', error)
+      } finally {
+        setLoading(false)
       }
-
-      setLoading(false)
     }
 
     fetchData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
   if (loading) {
