@@ -3,15 +3,13 @@ import { PurchasePaymentMethod, AssignmentPaymentMethod, ClientStatus, UserRole 
 export const PURCHASE_PAYMENT_METHODS: { value: PurchasePaymentMethod; label: string }[] = [
   { value: 'banesco_bss', label: 'Banesco BSS' },
   { value: 'paypal', label: 'PayPal' },
-  { value: 'zelle', label: 'Zelle' },
+  { value: 'zelle', label: 'Zelle (Bank of America)' },
 ]
 
-export const ASSIGNMENT_PAYMENT_METHODS: { value: AssignmentPaymentMethod; label: string }[] = [
-  { value: 'banesco_bss', label: 'Banesco BSS' },
-  { value: 'paypal', label: 'PayPal' },
-  { value: 'zelle', label: 'Zelle' },
-  { value: 'cash', label: 'Efectivo' },
-  { value: 'transfer', label: 'Transferencia' },
+export const ASSIGNMENT_PAYMENT_METHODS: { value: AssignmentPaymentMethod; label: string; description?: string }[] = [
+  { value: 'banesco_bss', label: 'Banesco BSS', description: 'Pago en bolívares a tasa paralelo' },
+  { value: 'zelle', label: 'Zelle (Bank of America)', description: 'Pago en USD vía Zelle' },
+  { value: 'paypal', label: 'PayPal', description: 'Pago en USD vía PayPal' },
 ]
 
 export const CLIENT_STATUSES: { value: ClientStatus; label: string; color: string }[] = [
@@ -30,6 +28,4 @@ export const PAYMENT_METHOD_LABELS: Record<string, string> = {
   banesco_bss: 'Banesco BSS',
   paypal: 'PayPal',
   zelle: 'Zelle',
-  cash: 'Efectivo',
-  transfer: 'Transferencia',
 }

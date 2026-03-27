@@ -8,16 +8,19 @@ import { RevenueChart } from '@/components/dashboard/RevenueChart'
 import { ProfitabilityChart } from '@/components/dashboard/ProfitabilityChart'
 import { PaymentMethodPie } from '@/components/dashboard/PaymentMethodPie'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatUSD } from '@/lib/utils'
+import { formatUSD, formatBSS } from '@/lib/utils'
 import type { CreditBalance, MonthlyProfitability, MonthlyFinancialSummary, CreditAssignment } from '@/lib/types'
 import {
   CircleDollarSign,
   Package,
   Send,
   DollarSign,
-  Receipt,
+  Gift,
   TrendingUp,
+  Landmark,
+  CreditCard,
 } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -27,13 +30,21 @@ export default function DashboardPage() {
   const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary[]>([])
   const [recentAssignments, setRecentAssignments] = useState<CreditAssignment[]>([])
   const [paymentMethods, setPaymentMethods] = useState<{ method: string; total: number }[]>([])
+  const [allAssignments, setAllAssignments] = useState<{
+    payment_method: string | null
+    payment_amount_usd: number | null
+    payment_amount_bss: number | null
+    is_courtesy: boolean
+    quantity: number
+    created_at: string
+  }[]>([])
 
   const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [balanceRes, profitRes, summaryRes, assignmentsRes] = await Promise.all([
+        const [balanceRes, profitRes, summaryRes, recentRes, allRes] = await Promise.all([
           supabase.from('credit_balance').select('*').maybeSingle(),
           supabase.from('monthly_profitability').select('*').limit(12),
           supabase.from('monthly_financial_summary').select('*').limit(12),
@@ -42,29 +53,27 @@ export default function DashboardPage() {
             .select('*, clients(name), profiles(full_name)')
             .order('created_at', { ascending: false })
             .limit(10),
+          supabase
+            .from('credit_assignments')
+            .select('payment_method, payment_amount_usd, payment_amount_bss, is_courtesy, quantity, created_at'),
         ])
 
-      console.log('[Dashboard] balance:', balanceRes.data, balanceRes.error?.message)
-      console.log('[Dashboard] profit:', profitRes.data?.length, profitRes.error?.message)
-      console.log('[Dashboard] summary:', summaryRes.data?.length, summaryRes.error?.message)
-      console.log('[Dashboard] assignments:', assignmentsRes.data?.length, assignmentsRes.error?.message)
+        if (balanceRes.data) setBalance(balanceRes.data)
+        if (profitRes.data) setProfitability(profitRes.data)
+        if (summaryRes.data) setMonthlySummary(summaryRes.data)
+        if (recentRes.data) setRecentAssignments(recentRes.data)
+        if (allRes.data) setAllAssignments(allRes.data)
 
-      if (balanceRes.data) setBalance(balanceRes.data)
-      if (profitRes.data) setProfitability(profitRes.data)
-      if (summaryRes.data) setMonthlySummary(summaryRes.data)
-      if (assignmentsRes.data) setRecentAssignments(assignmentsRes.data)
-
-      // Calculate payment methods from assignments
-      if (assignmentsRes.data) {
-        const methodMap: Record<string, number> = {}
-        assignmentsRes.data.forEach((a: CreditAssignment) => {
-          if (a.payment_method && a.payment_amount_usd) {
-            methodMap[a.payment_method] = (methodMap[a.payment_method] || 0) + a.payment_amount_usd
-          }
-        })
-        setPaymentMethods(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
-      }
-
+        // Payment method totals
+        if (allRes.data) {
+          const methodMap: Record<string, number> = {}
+          allRes.data.forEach((a) => {
+            if (a.payment_method && a.payment_amount_usd && !a.is_courtesy) {
+              methodMap[a.payment_method] = (methodMap[a.payment_method] || 0) + a.payment_amount_usd
+            }
+          })
+          setPaymentMethods(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
+        }
       } catch (err) {
         console.error('Dashboard fetch error:', err)
       } finally {
@@ -76,6 +85,32 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
+  // Calculate live payment method totals
+  const now = new Date()
+  const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  const thisMonthAssignments = allAssignments.filter(a => a.created_at >= currentMonthStart)
+
+  const zelleTotal = thisMonthAssignments
+    .filter(a => a.payment_method === 'zelle' && !a.is_courtesy)
+    .reduce((s, a) => s + (a.payment_amount_usd ?? 0), 0)
+
+  const paypalTotal = thisMonthAssignments
+    .filter(a => a.payment_method === 'paypal' && !a.is_courtesy)
+    .reduce((s, a) => s + (a.payment_amount_usd ?? 0), 0)
+
+  const banescoUsd = thisMonthAssignments
+    .filter(a => a.payment_method === 'banesco_bss' && !a.is_courtesy)
+    .reduce((s, a) => s + (a.payment_amount_usd ?? 0), 0)
+
+  const banescoBss = thisMonthAssignments
+    .filter(a => a.payment_method === 'banesco_bss' && !a.is_courtesy)
+    .reduce((s, a) => s + (a.payment_amount_bss ?? 0), 0)
+
+  const courtesyCount = thisMonthAssignments
+    .filter(a => a.is_courtesy)
+    .reduce((s, a) => s + a.quantity, 0)
+
+  const totalRevenueMonth = zelleTotal + paypalTotal + banescoUsd
   const currentMonth = monthlySummary[0]
 
   if (loading) {
@@ -87,6 +122,7 @@ export default function DashboardPage() {
             <Skeleton key={i} className="h-28" />
           ))}
         </div>
+        <Skeleton className="h-40" />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <Skeleton className="h-80" />
           <Skeleton className="h-80 lg:col-span-2" />
@@ -99,6 +135,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard</h1>
 
+      {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KPICard
           title="Créditos Disponibles"
@@ -120,15 +157,15 @@ export default function DashboardPage() {
         />
         <KPICard
           title="Ingresos del Mes"
-          value={formatUSD(currentMonth?.revenue_usd ?? 0)}
+          value={formatUSD(totalRevenueMonth)}
           icon={DollarSign}
           iconColor="text-green-600 bg-green-100"
         />
         <KPICard
-          title="Ticket Promedio"
-          value={formatUSD(currentMonth?.avg_ticket_usd ?? 0)}
-          icon={Receipt}
-          iconColor="text-yellow-600 bg-yellow-100"
+          title="Cortesías del Mes"
+          value={`${courtesyCount} créditos`}
+          icon={Gift}
+          iconColor="text-purple-600 bg-purple-100"
         />
         <KPICard
           title="Margen Mensual"
@@ -138,6 +175,48 @@ export default function DashboardPage() {
         />
       </div>
 
+      {/* Live payment method breakdown */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Ingresos del Mes por Método de Pago</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-blue-100">
+                <Landmark className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-blue-600 font-medium">Banesco BSS</p>
+                <p className="text-lg font-bold text-blue-800">{formatBSS(banescoBss)}</p>
+                <p className="text-xs text-blue-600">≈ {formatUSD(banescoUsd)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-green-100">
+                <DollarSign className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs text-green-600 font-medium">Zelle (BoA)</p>
+                <p className="text-lg font-bold text-green-800">{formatUSD(zelleTotal)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 p-4 rounded-lg bg-indigo-50 border border-indigo-200">
+              <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-indigo-100">
+                <CreditCard className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs text-indigo-600 font-medium">PayPal</p>
+                <p className="text-lg font-bold text-indigo-800">{formatUSD(paypalTotal)}</p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <CreditGauge
           available={balance?.available_credits ?? 0}

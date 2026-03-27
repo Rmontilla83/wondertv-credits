@@ -1,7 +1,7 @@
 export type UserRole = 'admin' | 'operator' | 'viewer'
 export type ClientStatus = 'active' | 'inactive' | 'suspended'
 export type PurchasePaymentMethod = 'banesco_bss' | 'paypal' | 'zelle'
-export type AssignmentPaymentMethod = 'banesco_bss' | 'paypal' | 'zelle' | 'cash' | 'transfer'
+export type AssignmentPaymentMethod = 'banesco_bss' | 'paypal' | 'zelle'
 
 export interface Profile {
   id: string
@@ -35,6 +35,9 @@ export interface Client {
   status: ClientStatus
   notes: string | null
   created_by: string | null
+  flujo_cust_id: string | null
+  flujo_login: string | null
+  country: string | null
   created_at: string
   updated_at: string
 }
@@ -46,6 +49,8 @@ export interface CreditAssignment {
   quantity: number
   period_start: string
   period_end: string
+  is_courtesy: boolean
+  courtesy_reason: string | null
   payment_amount_usd: number | null
   payment_method: AssignmentPaymentMethod | null
   payment_reference: string | null

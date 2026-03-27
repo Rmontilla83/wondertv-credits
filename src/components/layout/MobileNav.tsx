@@ -17,6 +17,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
+  RefreshCw,
 } from 'lucide-react'
 
 const navigation = [
@@ -25,6 +26,7 @@ const navigation = [
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
   { name: 'Asignaciones', href: '/dashboard/assignments', icon: FileText },
   { name: 'Finanzas', href: '/dashboard/financials', icon: BarChart3 },
+  { name: 'Sync Flujo TV', href: '/dashboard/sync', icon: RefreshCw, adminOnly: true },
   { name: 'Configuración', href: '/dashboard/settings', icon: Settings, adminOnly: true },
 ]
 
