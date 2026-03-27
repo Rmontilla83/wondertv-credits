@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types'
 import type { User } from '@supabase/supabase-js'
@@ -29,16 +29,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
+  const manualSignOut = useRef(false)
 
-  // Effect 1: Listen to auth state changes (ONLY set user, no async DB calls)
+  // Effect 1: Listen to auth state changes
   useEffect(() => {
     const supabase = createClient()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        console.log('[Auth]', _event, session?.user?.email ?? 'no user')
-        setUser(session?.user ?? null)
-        if (!session?.user) {
+      (event, session) => {
+        console.log('[Auth]', event, session?.user?.email ?? 'no user')
+
+        if (event === 'SIGNED_OUT') {
+          // Only clear user if it was a manual sign out
+          if (manualSignOut.current) {
+            setUser(null)
+            setProfile(null)
+            setLoading(false)
+          }
+          return
+        }
+
+        // For INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED
+        if (session?.user) {
+          setUser(session.user)
+        } else if (event === 'INITIAL_SESSION') {
+          // No session at all on page load
+          setUser(null)
           setProfile(null)
           setLoading(false)
         }
@@ -50,12 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  // Effect 2: When user changes, fetch profile SEPARATELY (not inside onAuthStateChange)
+  // Effect 2: When user changes, fetch profile separately
   useEffect(() => {
-    if (!user) {
-      setLoading(false)
-      return
-    }
+    if (!user) return
 
     let cancelled = false
     const supabase = createClient()
@@ -77,10 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user])
 
   const signOut = async () => {
+    manualSignOut.current = true
     const supabase = createClient()
     await supabase.auth.signOut()
-    setUser(null)
-    setProfile(null)
     window.location.href = '/login'
   }
 
