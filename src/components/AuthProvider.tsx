@@ -31,14 +31,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const loadProfile = useCallback(async (userId: string) => {
-    try {
-      const { data } = await createClient()
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+    const supabase = createClient()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single()
+
+    console.log('[Auth] Profile fetch:', { data, error: error?.message })
+
+    if (data) {
       setProfile(data)
-    } catch {
+    } else {
+      console.error('[Auth] Profile error:', error?.message, error?.code)
       setProfile(null)
     }
   }, [])
@@ -46,11 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const supabase = createClient()
 
-    // onAuthStateChange fires INITIAL_SESSION on mount with current session
-    // This replaces the need for getSession() call
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('[Auth]', event, session?.user?.email ?? 'no user')
+        console.log('[Auth] Event:', event, session?.user?.email ?? 'no user')
         const currentUser = session?.user ?? null
         setUser(currentUser)
 

@@ -44,6 +44,11 @@ export default function DashboardPage() {
             .limit(10),
         ])
 
+      console.log('[Dashboard] balance:', balanceRes.data, balanceRes.error?.message)
+      console.log('[Dashboard] profit:', profitRes.data?.length, profitRes.error?.message)
+      console.log('[Dashboard] summary:', summaryRes.data?.length, summaryRes.error?.message)
+      console.log('[Dashboard] assignments:', assignmentsRes.data?.length, assignmentsRes.error?.message)
+
       if (balanceRes.data) setBalance(balanceRes.data)
       if (profitRes.data) setProfitability(profitRes.data)
       if (summaryRes.data) setMonthlySummary(summaryRes.data)
