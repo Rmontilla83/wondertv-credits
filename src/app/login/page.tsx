@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,29 +14,35 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
+  const [errorMsg, setErrorMsg] = useState('')
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMsg('')
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      toast.error('Error al iniciar sesión', {
-        description: error.message,
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       })
-      setLoading(false)
-      return
-    }
 
-    toast.success('Sesión iniciada correctamente')
-    router.push('/dashboard')
-    router.refresh()
+      if (error) {
+        setErrorMsg(error.message)
+        toast.error('Error al iniciar sesión', {
+          description: error.message,
+        })
+        setLoading(false)
+        return
+      }
+
+      // Use full page reload to ensure middleware picks up the new cookies
+      window.location.href = '/dashboard'
+    } catch (err) {
+      setErrorMsg(String(err))
+      setLoading(false)
+    }
   }
 
   return (
@@ -84,6 +89,9 @@ export default function LoginPage() {
                 disabled={loading}
               />
             </div>
+            {errorMsg && (
+              <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{errorMsg}</p>
+            )}
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={loading}>
               {loading ? (
                 <>

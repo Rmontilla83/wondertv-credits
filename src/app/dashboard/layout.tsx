@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
@@ -10,9 +12,24 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { loading } = useAuth()
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [timedOut, setTimedOut] = useState(false)
 
-  if (loading) {
+  // Safety timeout - if loading takes more than 5 seconds, stop waiting
+  useEffect(() => {
+    const timer = setTimeout(() => setTimedOut(true), 5000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // If not loading and no user, redirect to login
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace('/login')
+    }
+  }, [loading, user, router])
+
+  if (loading && !timedOut) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
