@@ -34,64 +34,82 @@ const ICON_MAP: Record<string, typeof AlertTriangle> = {
   AlertTriangle, RefreshCw, Megaphone, PartyPopper,
 }
 
+const LOGO_URL = 'https://wondertv-credits.vercel.app/logo.png'
+const WA_NUMBER = '584248488722'
+const WA_BUTTON = `<div style="text-align:center;margin:28px 0 12px">
+  <a href="https://wa.me/${WA_NUMBER}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:18px;font-weight:bold;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(37,211,102,0.4)">
+    <span style="vertical-align:middle">&#9742;</span>&nbsp;&nbsp;Escr&iacute;benos por WhatsApp
+  </a>
+  <p style="margin:10px 0 0;color:#6b7280;font-size:13px">+58 424-8488722</p>
+</div>`
+const EMAIL_HEADER = `<div style="text-align:center;padding:24px 20px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px 12px 0 0">
+  <img src="${LOGO_URL}" alt="Wonder TV" width="180" style="max-width:180px;height:auto" />
+</div>`
+const EMAIL_FOOTER = `${WA_BUTTON}
+<div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
+  <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV &mdash; Tu entretenimiento sin l&iacute;mites</p>
+  <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Este correo fue enviado a {email}</p>
+</div>`
+
 const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
   expiring: {
-    subject: '⚠️ {nombre}, tu servicio Wonder TV vence en {dias} días',
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
-    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+    subject: '⚠️ {nombre}, tu servicio Wonder TV vence en {dias} dias',
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  ${EMAIL_HEADER}
+  <div style="padding:24px 28px 20px">
+    <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV <strong>vence en {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
+    <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
+      <p style="margin:0;color:#92400e;font-weight:bold;font-size:15px">&#128197; Renueva ahora y no pierdas ni un d&iacute;a</p>
+    </div>
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 0">Para renovar tu suscripci&oacute;n, escr&iacute;benos por WhatsApp y te atendemos al instante:</p>
+    ${EMAIL_FOOTER}
   </div>
-  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
-  <p style="color:#4b5563;font-size:16px;line-height:1.6">Tu servicio de Wonder TV <strong>vence en {dias} días</strong>. No te quedes sin acceso a tus canales favoritos.</p>
-  <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
-    <p style="margin:0;color:#92400e;font-weight:bold">📅 Renueva ahora y no pierdas ni un día</p>
-  </div>
-  <p style="color:#4b5563">Contáctanos para renovar tu suscripción. ¡Estamos para ayudarte!</p>
-  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
 </div>`,
   },
   reactivation: {
     subject: '🔄 {nombre}, te extrañamos en Wonder TV',
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
-    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  ${EMAIL_HEADER}
+  <div style="padding:24px 28px 20px">
+    <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Notamos que tu servicio de Wonder TV expir&oacute;. <strong>&iexcl;Queremos que vuelvas!</strong></p>
+    <div style="background:#dbeafe;border-left:4px solid #3b82f6;border-radius:8px;padding:16px;margin:20px 0">
+      <p style="margin:0;color:#1e40af;font-weight:bold;font-size:15px">&#127881; Reactiva tu servicio y vuelve a disfrutar de todos tus canales</p>
+    </div>
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 0">Escr&iacute;benos por WhatsApp y te ayudamos a reactivar tu cuenta en minutos:</p>
+    ${EMAIL_FOOTER}
   </div>
-  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
-  <p style="color:#4b5563;font-size:16px;line-height:1.6">Notamos que tu servicio de Wonder TV expiró. <strong>¡Queremos que vuelvas!</strong></p>
-  <div style="background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;padding:16px;margin:20px 0">
-    <p style="margin:0;color:#1e40af;font-weight:bold">🎉 Reactiva tu servicio y vuelve a disfrutar de todos tus canales</p>
-  </div>
-  <p style="color:#4b5563">Escríbenos y con gusto te ayudamos a reactivar tu cuenta.</p>
-  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
 </div>`,
   },
   promotion: {
     subject: '🎁 {nombre}, tenemos una oferta especial para ti',
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
-    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  ${EMAIL_HEADER}
+  <div style="padding:24px 28px 20px">
+    <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tenemos una promoci&oacute;n especial que no te puedes perder.</p>
+    <div style="background:#d1fae5;border-left:4px solid #10b981;border-radius:8px;padding:16px;margin:20px 0">
+      <p style="margin:0;color:#065f46;font-weight:bold;font-size:15px">&#10024; Oferta por tiempo limitado &mdash; &iexcl;no la dejes pasar!</p>
+    </div>
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 0">Para aprovechar esta promoci&oacute;n, escr&iacute;benos por WhatsApp:</p>
+    ${EMAIL_FOOTER}
   </div>
-  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
-  <p style="color:#4b5563;font-size:16px;line-height:1.6">Tenemos una promoción especial que no te puedes perder.</p>
-  <div style="background:#d1fae5;border:1px solid #10b981;border-radius:8px;padding:16px;margin:20px 0">
-    <p style="margin:0;color:#065f46;font-weight:bold">✨ Escríbenos para más detalles</p>
-  </div>
-  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
 </div>`,
   },
   welcome: {
     subject: '🎉 Bienvenido a Wonder TV, {nombre}!',
-    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
-    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
+  ${EMAIL_HEADER}
+  <div style="padding:24px 28px 20px">
+    <h2 style="color:#1f2937;margin:0 0 12px">&iexcl;Bienvenido {nombre}! 🎉</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Gracias por unirte a Wonder TV. Ya puedes disfrutar de todos nuestros canales y contenido.</p>
+    <div style="background:#ede9fe;border-left:4px solid #8b5cf6;border-radius:8px;padding:16px;margin:20px 0">
+      <p style="margin:0;color:#5b21b6;font-weight:bold;font-size:15px">&#128250; Tu usuario IPTV: {usuario}</p>
+    </div>
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 0">Si necesitas ayuda o tienes alguna pregunta, escr&iacute;benos por WhatsApp:</p>
+    ${EMAIL_FOOTER}
   </div>
-  <h2 style="color:#1f2937">¡Bienvenido {nombre}! 🎉</h2>
-  <p style="color:#4b5563;font-size:16px;line-height:1.6">Gracias por unirte a Wonder TV. Ya puedes disfrutar de todos nuestros canales y contenido.</p>
-  <div style="background:#ede9fe;border:1px solid #8b5cf6;border-radius:8px;padding:16px;margin:20px 0">
-    <p style="margin:0;color:#5b21b6;font-weight:bold">📺 Tu usuario IPTV: {usuario}</p>
-  </div>
-  <p style="color:#4b5563">Si necesitas ayuda, no dudes en contactarnos.</p>
-  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
 </div>`,
   },
 }
