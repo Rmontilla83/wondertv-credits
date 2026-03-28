@@ -21,9 +21,9 @@ export function Header() {
       <Image
         src="/logo-small.png"
         alt="Wonder TV"
-        width={32}
-        height={32}
-        className="hidden lg:block"
+        width={180}
+        height={180}
+        className="hidden lg:block w-9 h-9"
       />
       <div className="flex-1" />
       <div className="flex items-center gap-3">
