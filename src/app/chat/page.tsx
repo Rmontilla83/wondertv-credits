@@ -160,22 +160,40 @@ export default function ChatPage() {
         )}
 
         {/* Chat messages */}
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
-            {msg.role === 'assistant' && (
-              <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shrink-0 mr-2 mt-1 flex items-center justify-center">
-                <span className="text-white text-xs font-bold">V</span>
+        {messages.map((msg, i) => {
+          // Parse WhatsApp handoff marker from bot messages
+          const waMatch = msg.role === 'assistant' ? msg.content.match(/\[WHATSAPP:(.+?)\]/) : null
+          const displayText = waMatch ? msg.content.replace(/\[WHATSAPP:.+?\]/, '').trim() : msg.content
+          const waMessage = waMatch ? waMatch[1].trim() : null
+
+          return (
+            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom-2 duration-300`}>
+              {msg.role === 'assistant' && (
+                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shrink-0 mr-2 mt-1 flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">V</span>
+                </div>
+              )}
+              <div className={`max-w-[80%] ${
+                msg.role === 'user'
+                  ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-purple-500/10'
+                  : 'bg-white/8 backdrop-blur-sm text-gray-100 rounded-2xl rounded-bl-md border border-white/10'
+              } px-4 py-3`}>
+                <p className="text-[13.5px] whitespace-pre-line leading-relaxed">{displayText}</p>
+                {waMessage && (
+                  <a
+                    href={`${WA_LINK}?text=${encodeURIComponent(waMessage)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-5 rounded-xl transition-all shadow-lg shadow-emerald-500/20 text-sm"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.614-1.467A11.955 11.955 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818c-2.169 0-4.189-.614-5.916-1.677l-.424-.26-2.742.872.876-2.679-.28-.44A9.777 9.777 0 012.182 12c0-5.414 4.404-9.818 9.818-9.818S21.818 6.586 21.818 12s-4.404 9.818-9.818 9.818z"/></svg>
+                    Continuar por WhatsApp
+                  </a>
+                )}
               </div>
-            )}
-            <div className={`max-w-[80%] ${
-              msg.role === 'user'
-                ? 'bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl rounded-br-md shadow-lg shadow-purple-500/10'
-                : 'bg-white/8 backdrop-blur-sm text-gray-100 rounded-2xl rounded-bl-md border border-white/10'
-            } px-4 py-3`}>
-              <p className="text-[13.5px] whitespace-pre-line leading-relaxed">{msg.content}</p>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
         {/* Typing */}
         {loading && (
