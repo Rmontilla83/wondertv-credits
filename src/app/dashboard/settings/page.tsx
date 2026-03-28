@@ -64,6 +64,10 @@ export default function SettingsPage() {
   const [newRate, setNewRate] = useState('')
   const [savingRate, setSavingRate] = useState(false)
 
+  // App settings
+  const [downloaderCode, setDownloaderCode] = useState('')
+  const [savingCode, setSavingCode] = useState(false)
+
   const supabase = useMemo(() => createClient(), [])
 
   const fetchUsers = useCallback(async () => {
@@ -86,6 +90,13 @@ export default function SettingsPage() {
           .limit(10)
 
         if (ratesData) setRates(ratesData)
+
+        const { data: settingsData } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'downloader_code')
+          .single()
+        if (settingsData) setDownloaderCode(settingsData.value)
       } catch (error) {
         console.error('Error fetching settings data:', error)
       } finally {
@@ -536,6 +547,49 @@ export default function SettingsPage() {
               </div>
             </>
           )}
+        </CardContent>
+      </Card>
+      {/* App Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Configuracion de la App</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium">Codigo de Downloader</Label>
+            <p className="text-xs text-muted-foreground mb-2">
+              Este codigo lo usa Valentina (chatbot) cuando da instrucciones de instalacion.
+              Actualizado cuando el proveedor cambia el codigo.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                value={downloaderCode}
+                onChange={(e) => setDownloaderCode(e.target.value)}
+                placeholder="5868166"
+                className="font-mono max-w-[200px]"
+              />
+              <Button
+                onClick={async () => {
+                  if (!downloaderCode.trim()) { toast.error('Ingresa un codigo'); return }
+                  setSavingCode(true)
+                  const { error } = await supabase
+                    .from('app_settings')
+                    .upsert({ key: 'downloader_code', value: downloaderCode.trim(), updated_at: new Date().toISOString() })
+                  if (error) {
+                    toast.error('Error al guardar: ' + error.message)
+                  } else {
+                    toast.success('Codigo de Downloader actualizado. Valentina ya usa el nuevo codigo.')
+                  }
+                  setSavingCode(false)
+                }}
+                disabled={savingCode}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {savingCode ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                Guardar
+              </Button>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

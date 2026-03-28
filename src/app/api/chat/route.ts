@@ -46,7 +46,7 @@ Siempre destaca el valor: "por menos de $5 al mes tienes todo".
 Para TODOS los dispositivos el proceso es similar:
 1. Activar opciones de desarrollador / fuentes desconocidas
 2. Descargar la app "Downloader" desde la tienda
-3. En Downloader colocar el codigo: 5868166
+3. En Downloader colocar el codigo: {{DOWNLOADER_CODE}}
 4. Se descarga la app, instalar e ingresar usuario y clave
 
 Fire TV Stick: Menu > Mi Fire TV > Acerca de > presionar nombre 7 veces para desbloquear desarrollador. Luego Opciones para desarrolladores > activar Depurado ADB y Apps de origen desconocido.
@@ -142,6 +142,24 @@ function getClient() {
   return new Anthropic({ apiKey: key })
 }
 
+async function getDownloaderCode(): Promise<string> {
+  try {
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'downloader_code')
+      .single()
+    return data?.value || '5868166'
+  } catch {
+    return '5868166'
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { messages } = await request.json()
@@ -150,12 +168,15 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'messages requerido' }, { status: 400 })
     }
 
+    const downloaderCode = await getDownloaderCode()
+    const systemPrompt = SYSTEM_PROMPT.replace(/\{\{DOWNLOADER_CODE\}\}/g, downloaderCode)
+
     const client = getClient()
 
     const response = await client.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
-      system: SYSTEM_PROMPT,
+      system: systemPrompt,
       messages: messages.map((m: { role: string; content: string }) => ({
         role: m.role as 'user' | 'assistant',
         content: m.content,
