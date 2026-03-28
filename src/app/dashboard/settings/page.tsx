@@ -9,8 +9,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -25,7 +25,6 @@ import {
 import { USER_ROLES } from '@/lib/constants'
 import { formatDateTime } from '@/lib/utils'
 import { toast } from 'sonner'
-import type { ExchangeRate } from '@/lib/types'
 import { Loader2, UserPlus, Save, Edit, UserX, UserCheck } from 'lucide-react'
 
 interface UserWithAuth {
@@ -43,7 +42,6 @@ export default function SettingsPage() {
   const { profile } = useAuth()
   const [loading, setLoading] = useState(true)
   const [users, setUsers] = useState<UserWithAuth[]>([])
-  const [rates, setRates] = useState<ExchangeRate[]>([])
 
   // New user form
   const [newEmail, setNewEmail] = useState('')
@@ -59,10 +57,6 @@ export default function SettingsPage() {
   const [editRole, setEditRole] = useState('')
   const [editPhone, setEditPhone] = useState('')
   const [savingEdit, setSavingEdit] = useState(false)
-
-  // Exchange rate
-  const [newRate, setNewRate] = useState('')
-  const [savingRate, setSavingRate] = useState(false)
 
   // App settings
   const [downloaderCode, setDownloaderCode] = useState('')
@@ -82,14 +76,6 @@ export default function SettingsPage() {
     async function fetchData() {
       try {
         await fetchUsers()
-
-        const { data: ratesData } = await supabase
-          .from('exchange_rates')
-          .select('*')
-          .order('recorded_at', { ascending: false })
-          .limit(10)
-
-        if (ratesData) setRates(ratesData)
 
         const { data: settingsData } = await supabase
           .from('app_settings')
@@ -209,32 +195,6 @@ export default function SettingsPage() {
 
     toast.success(user.banned ? 'Usuario activado' : 'Usuario desactivado')
     await fetchUsers()
-  }
-
-  const handleSaveRate = async () => {
-    if (!newRate) {
-      toast.error('Ingresa una tasa de cambio')
-      return
-    }
-
-    setSavingRate(true)
-    const { error } = await supabase.from('exchange_rates').insert({
-      rate_bss_usd: Number(newRate),
-      source: 'manual',
-    })
-
-    if (error) {
-      toast.error('Error al guardar tasa', { description: error.message })
-      setSavingRate(false)
-      return
-    }
-
-    toast.success('Tasa de cambio guardada')
-    setNewRate('')
-    setSavingRate(false)
-
-    const { data } = await supabase.from('exchange_rates').select('*').order('recorded_at', { ascending: false }).limit(10)
-    if (data) setRates(data)
   }
 
   if (loading) {
@@ -493,62 +453,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Exchange Rate */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Tasa de Cambio BSS/USD</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-3 items-end">
-            <div className="space-y-2 flex-1 max-w-xs">
-              <Label htmlFor="rate">Nueva tasa (BSS por 1 USD)</Label>
-              <Input
-                id="rate"
-                type="number"
-                step="0.0001"
-                placeholder="Ej: 36.5000"
-                value={newRate}
-                onChange={(e) => setNewRate(e.target.value)}
-              />
-            </div>
-            <Button onClick={handleSaveRate} disabled={savingRate || !newRate} className="bg-blue-600 hover:bg-blue-700">
-              {savingRate ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-              Guardar
-            </Button>
-          </div>
-
-          {rates.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="text-sm font-semibold mb-3">Historial de Tasas</h3>
-                <div className="rounded-md border overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Fecha</TableHead>
-                        <TableHead className="text-right">Tasa BSS/USD</TableHead>
-                        <TableHead>Fuente</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {rates.map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell>{formatDateTime(r.recorded_at)}</TableCell>
-                          <TableCell className="text-right font-medium">{r.rate_bss_usd}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{r.source}</Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
       {/* App Settings */}
       <Card>
         <CardHeader>
