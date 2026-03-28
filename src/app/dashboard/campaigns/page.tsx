@@ -389,7 +389,7 @@ export default function CampaignsPage() {
 
       {/* Campaign editor - full page dialog */}
       <Dialog open={!!prepareType} onOpenChange={(open) => !open && !sending && setPrepareType(null)}>
-        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
+        <DialogContent className="sm:!max-w-[95vw] !w-[95vw] h-[92vh] flex flex-col !p-0 !gap-0 rounded-xl">
           <DialogHeader className="px-6 py-4 border-b shrink-0">
             <div className="flex items-center justify-between">
               <DialogTitle className="text-lg">
