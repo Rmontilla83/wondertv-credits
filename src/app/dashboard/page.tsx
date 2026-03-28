@@ -13,6 +13,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatUSD, formatBSS } from '@/lib/utils'
 import type { CreditBalance, MonthlyProfitability, MonthlyFinancialSummary, CreditAssignment, Client } from '@/lib/types'
+import { CompleteSaleForm } from '@/components/forms/CompleteSaleForm'
+import { Badge } from '@/components/ui/badge'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import {
   CircleDollarSign,
   Package,
@@ -22,6 +28,7 @@ import {
   TrendingUp,
   Landmark,
   CreditCard,
+  AlertCircle,
 } from 'lucide-react'
 
 export default function DashboardPage() {
@@ -31,6 +38,8 @@ export default function DashboardPage() {
   const [monthlySummary, setMonthlySummary] = useState<MonthlyFinancialSummary[]>([])
   const [recentAssignments, setRecentAssignments] = useState<CreditAssignment[]>([])
   const [paymentMethods, setPaymentMethods] = useState<{ method: string; total: number }[]>([])
+  const [pendingAssignments, setPendingAssignments] = useState<CreditAssignment[]>([])
+  const [completeSaleId, setCompleteSaleId] = useState<string | null>(null)
   const [allClients, setAllClients] = useState<Client[]>([])
   const [allAssignments, setAllAssignments] = useState<{
     payment_method: string | null
@@ -46,7 +55,7 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [balanceRes, profitRes, summaryRes, recentRes, allRes, clientsRes] = await Promise.all([
+        const [balanceRes, profitRes, summaryRes, recentRes, allRes, clientsRes, pendingRes] = await Promise.all([
           supabase.from('credit_balance').select('*').maybeSingle(),
           supabase.from('monthly_profitability').select('*').limit(12),
           supabase.from('monthly_financial_summary').select('*').limit(12),
@@ -61,6 +70,11 @@ export default function DashboardPage() {
           supabase
             .from('clients')
             .select('id, name, status, flujo_login, flujo_end_date, country'),
+          supabase
+            .from('credit_assignments')
+            .select('*, clients(name)')
+            .eq('payment_status', 'pending')
+            .order('created_at', { ascending: false }),
         ])
 
         if (balanceRes.data) setBalance(balanceRes.data)
@@ -69,6 +83,7 @@ export default function DashboardPage() {
         if (recentRes.data) setRecentAssignments(recentRes.data)
         if (allRes.data) setAllAssignments(allRes.data)
         if (clientsRes.data) setAllClients(clientsRes.data as Client[])
+        if (pendingRes.data) setPendingAssignments(pendingRes.data)
 
         // Payment method totals
         if (allRes.data) {
@@ -180,6 +195,57 @@ export default function DashboardPage() {
           iconColor="text-blue-600 bg-blue-100"
         />
       </div>
+
+      {/* Pending sales alert */}
+      {pendingAssignments.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-5 w-5" />
+              {pendingAssignments.length} venta{pendingAssignments.length > 1 ? 's' : ''} pendiente{pendingAssignments.length > 1 ? 's' : ''} de registrar
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {pendingAssignments.map((a) => (
+                <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-orange-200">
+                  <div>
+                    <p className="text-sm font-medium">{a.clients?.name}</p>
+                    <p className="text-xs text-muted-foreground">{a.notes}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-orange-100 text-orange-800">+{a.quantity} mes{a.quantity > 1 ? 'es' : ''}</Badge>
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => setCompleteSaleId(a.id)}
+                    >
+                      Registrar Pago
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Dialog open={!!completeSaleId} onOpenChange={(open) => !open && setCompleteSaleId(null)}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Completar Venta</DialogTitle>
+                </DialogHeader>
+                {completeSaleId && (
+                  <CompleteSaleForm
+                    assignment={pendingAssignments.find(a => a.id === completeSaleId)!}
+                    onComplete={() => {
+                      setCompleteSaleId(null)
+                      setPendingAssignments(prev => prev.filter(a => a.id !== completeSaleId))
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Live payment method breakdown */}
       <Card>

@@ -45,6 +45,8 @@ export interface Client {
   updated_at: string
 }
 
+export type PaymentStatus = 'pending' | 'completed'
+
 export interface CreditAssignment {
   id: string
   client_id: string
@@ -59,6 +61,7 @@ export interface CreditAssignment {
   payment_reference: string | null
   payment_amount_bss: number | null
   exchange_rate: number | null
+  payment_status: PaymentStatus
   notes: string | null
   created_at: string
   clients?: Client

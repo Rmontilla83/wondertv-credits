@@ -84,6 +84,7 @@ export async function POST(request: NextRequest) {
   let created = 0
   let updated = 0
   let errors = 0
+  let pendingSales = 0
 
   for (const account of accounts) {
     const { name, phone, email } = parseRemark(account.remark)
@@ -91,11 +92,31 @@ export async function POST(request: NextRequest) {
 
     const { data: existing } = await adminClient
       .from('clients')
-      .select('id')
+      .select('id, flujo_credits')
       .eq('flujo_cust_id', account.cust_id)
       .maybeSingle()
 
     if (existing) {
+      const oldCredits = existing.flujo_credits ?? 0
+      const newCredits = account.credit
+      const delta = newCredits - oldCredits
+
+      if (delta > 0) {
+        const { error: saleError } = await adminClient
+          .from('credit_assignments')
+          .insert({
+            client_id: existing.id,
+            quantity: delta,
+            period_start: account.start_date ? new Date(account.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            period_end: account.end_date ? new Date(account.end_date).toISOString().split('T')[0] : null,
+            is_courtesy: false,
+            payment_status: 'pending',
+            notes: `Auto-detectado: +${delta} créditos en sync`,
+          })
+
+        if (!saleError) pendingSales++
+      }
+
       const { error } = await adminClient
         .from('clients')
         .update({
@@ -152,6 +173,7 @@ export async function POST(request: NextRequest) {
       created,
       updated,
       errors,
+      pendingSales,
       total: accounts.length,
       dashboard: dashboardData ?? null,
     },
