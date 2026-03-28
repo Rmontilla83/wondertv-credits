@@ -34,13 +34,14 @@ export function Sidebar() {
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-gray-900 text-white min-h-screen">
-      <div className="flex items-center justify-center px-6 py-4 border-b border-gray-800">
+      <div className="flex items-center justify-center px-6 py-5 border-b border-gray-800">
         <Image
-          src="/logo-light-bg.png"
+          src="/logo-dark-bg.png"
           alt="Wonder TV"
-          width={140}
-          height={78}
+          width={120}
+          height={120}
           priority
+          className="rounded-2xl"
         />
       </div>
 

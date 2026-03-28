@@ -19,11 +19,11 @@ export function Header() {
     <header className="sticky top-0 z-40 flex h-16 items-center gap-4 border-b bg-white px-4 lg:px-6">
       <MobileNav />
       <Image
-        src="/logo-small.png"
+        src="/icon-192.png"
         alt="Wonder TV"
         width={36}
         height={36}
-        className="hidden lg:block"
+        className="hidden lg:block rounded-lg"
       />
       <div className="flex-1" />
       <div className="flex items-center gap-3">

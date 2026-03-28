@@ -45,12 +45,13 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="left" className="w-72 bg-gray-900 text-white p-0 border-gray-800">
         <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-        <div className="flex items-center justify-center px-6 py-4 border-b border-gray-800">
+        <div className="flex items-center justify-center px-6 py-5 border-b border-gray-800">
           <Image
-            src="/logo-light-bg.png"
+            src="/logo-dark-bg.png"
             alt="Wonder TV"
-            width={130}
-            height={72}
+            width={100}
+            height={100}
+            className="rounded-2xl"
           />
         </div>
 
