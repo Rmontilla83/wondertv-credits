@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
   for (const client of clients) {
     // Replace template variables
     const daysLeft = client.flujo_end_date
-      ? Math.ceil((new Date(client.flujo_end_date).getTime() - Date.now()) / 86400000)
+      ? Math.ceil((new Date(client.flujo_end_date as string).getTime() - Date.now()) / 86400000)
       : null
 
     const html = campaign.html_content

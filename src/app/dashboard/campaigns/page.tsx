@@ -23,7 +23,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { CAMPAIGN_TYPES, CAMPAIGN_SEGMENTS, CAMPAIGN_STATUSES } from '@/lib/constants'
-import { formatDateTime } from '@/lib/utils'
+import { formatDateTime, daysUntilExpiration } from '@/lib/utils'
 import { toast } from 'sonner'
 import type { Campaign, Client, CampaignSegment } from '@/lib/types'
 import {
@@ -235,21 +235,20 @@ export default function CampaignsPage() {
         if (campaignsRes.data) setCampaigns(campaignsRes.data)
 
         if (clientsRes.data) {
-          const now = Date.now()
           const counts: Record<string, number> = {}
           const active = clientsRes.data.filter(c => c.status === 'active')
           const inactive = clientsRes.data.filter(c => c.status === 'inactive')
 
           counts.expiring_7d = active.filter(c => {
-            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            const d = daysUntilExpiration(c.flujo_end_date)
             return d !== null && d >= 0 && d <= 7
           }).length
           counts.expiring_14d = active.filter(c => {
-            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            const d = daysUntilExpiration(c.flujo_end_date)
             return d !== null && d >= 0 && d <= 14
           }).length
           counts.expiring_30d = active.filter(c => {
-            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            const d = daysUntilExpiration(c.flujo_end_date)
             return d !== null && d >= 0 && d <= 30
           }).length
           counts.inactive = inactive.length

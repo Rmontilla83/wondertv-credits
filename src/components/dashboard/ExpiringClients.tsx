@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { formatDate } from '@/lib/utils'
+import { formatDate, daysUntilExpiration } from '@/lib/utils'
 import type { Client } from '@/lib/types'
 import { AlertTriangle, Clock, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
@@ -13,13 +13,11 @@ interface ExpiringClientsProps {
 }
 
 export function ExpiringClients({ clients }: ExpiringClientsProps) {
-  const now = Date.now()
-
   const withDays = clients
     .filter(c => c.flujo_end_date && c.status === 'active')
     .map(c => ({
       ...c,
-      daysLeft: Math.ceil((new Date(c.flujo_end_date!).getTime() - now) / (1000 * 60 * 60 * 24)),
+      daysLeft: daysUntilExpiration(c.flujo_end_date) ?? 0,
     }))
     .filter(c => c.daysLeft <= 30)
     .sort((a, b) => a.daysLeft - b.daysLeft)

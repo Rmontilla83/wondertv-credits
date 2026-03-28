@@ -58,6 +58,11 @@ export function getStatusColor(status: string): string {
   }
 }
 
+export function daysUntilExpiration(endDate: string | null | undefined): number | null {
+  if (!endDate) return null
+  return Math.ceil((new Date(endDate).getTime() - Date.now()) / 86400000)
+}
+
 export function getStatusLabel(status: string): string {
   switch (status) {
     case 'active': return 'Activo'

@@ -18,7 +18,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { formatUSD, formatDate, getStatusColor, getStatusLabel, formatBSS } from '@/lib/utils'
+import { formatUSD, formatDate, getStatusColor, getStatusLabel, formatBSS, daysUntilExpiration } from '@/lib/utils'
 import { PAYMENT_METHOD_LABELS } from '@/lib/constants'
 import type { Client, CreditAssignment } from '@/lib/types'
 import { ArrowLeft, Edit, Zap, Gift, Globe, Calendar, User, Phone, Mail, Tv, Clock, CreditCard, AlertCircle } from 'lucide-react'
@@ -98,10 +98,7 @@ export default function ClientDetailPage() {
   const totalCourtesy = assignments.filter(a => a.is_courtesy).reduce((sum, a) => sum + a.quantity, 0)
   const avgPricePerCredit = (totalCredits - totalCourtesy) > 0 ? totalPaid / (totalCredits - totalCourtesy) : 0
 
-  // Days until expiration
-  const daysToExpire = client.flujo_end_date
-    ? Math.ceil((new Date(client.flujo_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    : null
+  const daysToExpire = daysUntilExpiration(client.flujo_end_date)
 
   // Expiration urgency
   const expirationClass = daysToExpire === null ? '' :

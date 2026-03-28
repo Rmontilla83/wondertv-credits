@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
-import { formatDate } from '@/lib/utils'
+import { formatDate, daysUntilExpiration } from '@/lib/utils'
 import type { Client } from '@/lib/types'
 import { Download, Search, AlertTriangle, Clock, Calendar, Zap } from 'lucide-react'
 
@@ -46,10 +46,9 @@ export default function ExpiringPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [supabase])
 
-  const now = Date.now()
   const withDays = clients.map(c => ({
     ...c,
-    daysLeft: Math.ceil((new Date(c.flujo_end_date!).getTime() - now) / (1000 * 60 * 60 * 24)),
+    daysLeft: daysUntilExpiration(c.flujo_end_date) ?? 0,
   }))
 
   const maxDays = rangeFilter === 'expired' ? 0 : Number(rangeFilter)

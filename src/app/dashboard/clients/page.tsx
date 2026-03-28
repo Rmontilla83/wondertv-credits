@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Client } from '@/lib/types'
 import { Plus, Search } from 'lucide-react'
+import { daysUntilExpiration } from '@/lib/utils'
 
 type ClientRow = Client & { total_credits?: number; last_assignment?: string }
 
@@ -78,9 +79,8 @@ export default function ClientsPage() {
   const activeCount = clients.filter(c => c.status === 'active').length
   const inactiveCount = clients.filter(c => c.status === 'inactive').length
   const expiringCount = clients.filter(c => {
-    if (!c.flujo_end_date) return false
-    const days = Math.ceil((new Date(c.flujo_end_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-    return days >= 0 && days <= 7
+    const days = daysUntilExpiration(c.flujo_end_date)
+    return days !== null && days >= 0 && days <= 7
   }).length
 
   if (loading) {
