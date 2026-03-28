@@ -1,15 +1,16 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/AuthProvider'
+import { createClient } from '@/lib/supabase/client'
 import {
   LayoutDashboard,
   CreditCard,
   Users,
-  FileText,
   BarChart3,
   Settings,
   LogOut,
@@ -21,7 +22,6 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
-  { name: 'Asignaciones', href: '/dashboard/assignments', icon: FileText },
   { name: 'Vencimientos', href: '/dashboard/expiring', icon: AlertTriangle },
   { name: 'Finanzas', href: '/dashboard/financials', icon: BarChart3 },
   { name: 'Sync Flujo TV', href: '/dashboard/sync', icon: RefreshCw, adminOnly: true },
@@ -31,6 +31,18 @@ const navigation = [
 export function Sidebar() {
   const pathname = usePathname()
   const { profile, signOut } = useAuth()
+  const [pendingCount, setPendingCount] = useState(0)
+  const supabase = useMemo(() => createClient(), [])
+
+  useEffect(() => {
+    supabase
+      .from('credit_assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('payment_status', 'pending')
+      .then(({ count }) => {
+        if (count != null) setPendingCount(count)
+      })
+  }, [supabase])
 
   return (
     <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-gray-900 text-white min-h-screen">
@@ -62,6 +74,11 @@ export function Sidebar() {
             >
               <item.icon className="w-5 h-5 shrink-0" />
               {item.name}
+              {item.href === '/dashboard' && pendingCount > 0 && (
+                <span className="ml-auto bg-orange-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                  {pendingCount}
+                </span>
+              )}
             </Link>
           )
         })}

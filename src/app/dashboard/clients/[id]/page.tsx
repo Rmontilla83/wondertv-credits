@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/components/AuthProvider'
 import { ClientForm } from '@/components/forms/ClientForm'
 import { QuickRechargeForm } from '@/components/forms/QuickRechargeForm'
+import { CompleteSaleForm } from '@/components/forms/CompleteSaleForm'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -20,7 +21,7 @@ import {
 import { formatUSD, formatDate, getStatusColor, getStatusLabel, formatBSS } from '@/lib/utils'
 import { PAYMENT_METHOD_LABELS } from '@/lib/constants'
 import type { Client, CreditAssignment } from '@/lib/types'
-import { ArrowLeft, Edit, Zap, Gift, Globe, Calendar, User, Phone, Mail, Tv, Clock, CreditCard } from 'lucide-react'
+import { ArrowLeft, Edit, Zap, Gift, Globe, Calendar, User, Phone, Mail, Tv, Clock, CreditCard, AlertCircle } from 'lucide-react'
 
 export default function ClientDetailPage() {
   const params = useParams()
@@ -30,6 +31,7 @@ export default function ClientDetailPage() {
   const [assignments, setAssignments] = useState<CreditAssignment[]>([])
   const [editing, setEditing] = useState(false)
   const [rechargeOpen, setRechargeOpen] = useState(false)
+  const [completeSaleId, setCompleteSaleId] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
 
   const clientId = params.id as string
@@ -177,6 +179,52 @@ export default function ClientDetailPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Pending sales for this client */}
+      {assignments.filter(a => a.payment_status === 'pending').length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-5 w-5" />
+              Ventas pendientes de registrar
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {assignments.filter(a => a.payment_status === 'pending').map((a) => (
+              <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-orange-200">
+                <div>
+                  <Badge className="bg-orange-100 text-orange-800">+{a.quantity} mes{a.quantity > 1 ? 'es' : ''}</Badge>
+                  <p className="text-xs text-muted-foreground mt-1">{a.notes}</p>
+                </div>
+                <Button
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => setCompleteSaleId(a.id)}
+                >
+                  Registrar Pago
+                </Button>
+              </div>
+            ))}
+
+            <Dialog open={!!completeSaleId} onOpenChange={(open) => !open && setCompleteSaleId(null)}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Completar Venta</DialogTitle>
+                </DialogHeader>
+                {completeSaleId && (
+                  <CompleteSaleForm
+                    assignment={assignments.find(a => a.id === completeSaleId)!}
+                    onComplete={() => {
+                      setCompleteSaleId(null)
+                      fetchData()
+                    }}
+                  />
+                )}
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

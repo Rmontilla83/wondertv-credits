@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/AuthProvider'
+import { createClient } from '@/lib/supabase/client'
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,7 +14,6 @@ import {
   LayoutDashboard,
   CreditCard,
   Users,
-  FileText,
   BarChart3,
   Settings,
   LogOut,
@@ -25,7 +25,6 @@ const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
-  { name: 'Asignaciones', href: '/dashboard/assignments', icon: FileText },
   { name: 'Vencimientos', href: '/dashboard/expiring', icon: AlertTriangle },
   { name: 'Finanzas', href: '/dashboard/financials', icon: BarChart3 },
   { name: 'Sync Flujo TV', href: '/dashboard/sync', icon: RefreshCw, adminOnly: true },
@@ -36,11 +35,28 @@ export function MobileNav() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const { profile, signOut } = useAuth()
+  const [pendingCount, setPendingCount] = useState(0)
+  const supabase = useMemo(() => createClient(), [])
+
+  useEffect(() => {
+    supabase
+      .from('credit_assignments')
+      .select('id', { count: 'exact', head: true })
+      .eq('payment_status', 'pending')
+      .then(({ count }) => {
+        if (count != null) setPendingCount(count)
+      })
+  }, [supabase])
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger render={<Button variant="ghost" size="icon" className="lg:hidden" />}>
         <Menu className="h-5 w-5" />
+        {pendingCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-[10px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-1">
+            {pendingCount}
+          </span>
+        )}
         <span className="sr-only">Menú</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 bg-gray-900 text-white p-0 border-gray-800">
@@ -73,6 +89,11 @@ export function MobileNav() {
               >
                 <item.icon className="w-5 h-5 shrink-0" />
                 {item.name}
+                {item.href === '/dashboard' && pendingCount > 0 && (
+                  <span className="ml-auto bg-orange-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             )
           })}
