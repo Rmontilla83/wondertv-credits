@@ -10,7 +10,7 @@ App de control de creditos IPTV para el revendedor **Wonderclass** (Rafael Monti
 - **Supabase** (auth, Postgres, RLS)
 - **Tailwind CSS 4** + shadcn/ui
 - **Resend** (email campaigns)
-- **Anthropic SDK** (chatbot IA "Valentina" con Claude Haiku)
+- **Anthropic SDK** (chatbot IA "Valentina" con Claude Haiku 4.5)
 - Deploy en **Vercel**
 
 ## Flujo principal de negocio
@@ -21,6 +21,8 @@ App de control de creditos IPTV para el revendedor **Wonderclass** (Rafael Monti
 3. Sync automatico detecta Δ creditos → crea credit_assignment (pending)
 4. Operador completa el pago (metodo, monto, referencia) → payment_status = completed
 5. Dashboard muestra finanzas en tiempo real
+6. Chatbot "Valentina" atiende prospectos 24/7 → captura leads → transfiere a WhatsApp
+7. Campanas de email para vencimientos, reactivacion, promociones y bienvenida
 ```
 
 ## Sync con Flujo TV
@@ -37,15 +39,16 @@ El sync llama a la API de Flujo TV server-side con firma RSA+HMAC generada dinam
 
 ## Chatbot "Valentina" (/chat)
 
-Agente IA de ventas powered by Claude Haiku. Pagina publica sin auth.
+Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 
 - **Personalidad**: asesora de ventas, amable, persuasiva, NUNCA revela que es IA
 - **Conocimiento**: planes/precios, instalacion por dispositivo, metodos de pago, compatibilidad
 - **Formato**: texto plano (NO usa markdown **bold**), MAYUSCULAS para enfasis
-- **Flujo de venta**: recopila datos → da info de pago → espera confirmacion de pago → transfiere a WhatsApp con boton + datos pre-escritos
-- **Transferencia a WhatsApp**: solo cuando el cliente ya pago, tiene problema tecnico, o pide humano. Usa marcador `[WHATSAPP:mensaje]` que el frontend convierte en boton verde
-- **Captura de leads**: extrae email/telefono/nombre SOLO de mensajes del usuario (no del bot)
+- **Flujo de venta**: recopila datos → da info de pago → "avisame cuando pagues" → cliente confirma pago → transfiere a WhatsApp con boton + datos pre-escritos
+- **Transferencia a WhatsApp**: solo cuando el cliente ya pago, tiene problema tecnico, o pide humano. Usa marcador `[WHATSAPP:mensaje]` que el frontend convierte en boton verde. NUNCA transfiere antes de que el cliente confirme pago.
+- **Captura de leads**: extrae email/telefono/nombre SOLO de mensajes del usuario (no del bot, para evitar capturar datos de la empresa como el numero de Pago Movil)
 - **Conversaciones guardadas**: cada chat se almacena en `chat_conversations` con datos del lead
+- **Codigo Downloader dinamico**: lee el codigo de `app_settings` en cada request. Configurable desde Settings por el operador cuando el proveedor lo cambie. Placeholder `{{DOWNLOADER_CODE}}` en el system prompt.
 
 ### Estrategia de precios (en el bot y plantillas de email)
 
@@ -60,15 +63,15 @@ Agente IA de ventas powered by Claude Haiku. Pagina publica sin auth.
 
 Envio de emails via Resend con 4 tipos predefinidos:
 - **Recordatorio de vencimiento**: clientes por vencer en 7/14/30 dias
-- **Reactivacion**: clientes inactivos/expirados
+- **Reactivacion**: clientes inactivos/expirados (solo los que tienen email ~126 de 217)
 - **Promocion/Ventas**: tabla de precios visual con los 4 planes IPTV (FLUJO)
 - **Bienvenida**: nuevos clientes
 
-Editor full-page con:
+Editor full-page (95vw) con:
 - Panel izquierdo: segmento, asunto, contenido (tabs Preview/HTML)
 - Panel derecho: destinatarios editables, agregar individual, pegado masivo
-- Segmento "Vacio" para campanas a listas externas
-- Templates con logo Wonder TV, boton verde "Escribenos ahora" → /chat
+- Segmento "Vacio" para campanas a listas externas sin destinatarios pre-cargados
+- Templates con logo Wonder TV, boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
 - Historial de campanas enviadas con contadores
 
 ## Estructura de paginas
@@ -76,25 +79,25 @@ Editor full-page con:
 | Ruta | Funcion | Rol |
 |------|---------|-----|
 | `/dashboard` | KPIs, ventas pendientes, graficas, actividad | Todos |
-| `/dashboard/clients` | Tabla de clientes (orden portal Flujo TV) | Todos |
+| `/dashboard/clients` | Tabla de clientes (orden portal Flujo TV) con 5 filtros | Todos |
 | `/dashboard/clients/[id]` | Detalle + historial + ventas pendientes | Todos |
 | `/dashboard/credits` | Pool de creditos comprados | Todos |
 | `/dashboard/credits/new` | Registrar compra al proveedor | Admin |
-| `/dashboard/campaigns` | Campanas de email (4 tipos + editor) | Todos |
-| `/dashboard/conversations` | Historial de chats del bot | Todos |
-| `/dashboard/expiring` | Clientes por vencer | Todos |
+| `/dashboard/campaigns` | Campanas de email (4 tipos + editor full-page) | Todos |
+| `/dashboard/conversations` | Historial de chats del bot con stats | Todos |
+| `/dashboard/expiring` | Clientes por vencer (activos + inactivos) | Todos |
 | `/dashboard/financials` | Reportes P&L, margenes, burn rate | Todos |
-| `/dashboard/sync` | Sync con Flujo TV (progreso real-time + historial) | Admin |
-| `/dashboard/settings` | Usuarios, tasas de cambio | Admin |
-| `/chat` | Chatbot publico "Valentina" (sin auth) | Publico |
-| `/guia-operador.html` | Guia HTML completa para operadores (publica) | Publico |
+| `/dashboard/sync` | Sync con Flujo TV (progreso SSE + historial + boton portal) | Admin |
+| `/dashboard/settings` | Usuarios + codigo Downloader | Admin |
+| `/chat` | Chatbot publico "Valentina" (sin auth, dark premium UI) | Publico |
+| `/guia-operador.html` | Guia HTML completa para operadores | Publico |
 
 **Eliminadas**: `/dashboard/assignments` (reemplazada por auto-deteccion en sync)
 
 ## Tablas principales (Supabase)
 
 ### clients
-Sincronizada desde Flujo TV. Campos clave: `flujo_cust_id`, `flujo_login`, `flujo_credits`, `flujo_start_date`, `flujo_end_date`, `country`, `device_info` (login/password), `name`, `phone`, `email` (parseados del remark, pero edicion manual tiene prioridad), `notes` (remark original).
+Sincronizada desde Flujo TV. Campos clave: `flujo_cust_id`, `flujo_login`, `flujo_credits`, `flujo_start_date`, `flujo_end_date`, `country`, `device_info` (login/password), `name`, `phone`, `email` (parseados del remark, pero edicion manual tiene prioridad sobre sync), `notes` (remark original). Phone y email editables inline en la tabla.
 
 ### credit_purchases
 Compras de creditos al proveedor: `quantity`, `total_cost_usd`, `cost_per_credit` (generated), `payment_method`, `payment_reference`.
@@ -107,7 +110,7 @@ Ventas/cortesias a clientes. Campo clave: `payment_status` ('pending' | 'complet
 - Campos de cortesia: `is_courtesy`, `courtesy_reason`
 
 ### campaigns
-Campanas de email: `type` (expiring|reactivation|promotion|welcome), `status` (draft|sending|sent|failed), `subject`, `html_content`, `segment`, `total_recipients`, `sent_count`, `failed_count`.
+Campanas de email: `type` (expiring|reactivation|promotion|welcome), `status` (draft|sending|sent|failed), `subject`, `html_content`, `segment` (empty|expiring_7d|expiring_14d|expiring_30d|inactive|active|all|custom), `total_recipients`, `sent_count`, `failed_count`.
 
 ### campaign_emails
 Log por email enviado: `campaign_id`, `client_id`, `email`, `status` (sent|failed), `resend_id`, `error_message`.
@@ -121,13 +124,16 @@ Prospectos capturados: `name`, `email`, `phone`, `source` (chatbot-ai), `plan_in
 ### sync_logs
 Historial de syncs: `status` (success|failed|partial), `total_processed`, `created`, `updated`, `errors`, `pending_sales`, `duration_ms`, `error_message`.
 
+### app_settings
+Configuraciones globales (key-value): `downloader_code` (codigo para Downloader, configurable desde Settings, leido por chatbot en cada request).
+
 ### Views
 - `credit_balance`: total_purchased - total_assigned = available_credits
 - `monthly_financial_summary`: revenue, assignments, avg ticket por mes
 - `monthly_profitability`: cost vs revenue vs profit por mes
 
 ## Metodos de pago
-- `banesco_bss` - Bolivares (requiere monto BSS + tasa de cambio)
+- `banesco_bss` - Bolivares (operador ingresa tasa directamente en el formulario de venta)
 - `zelle` - USD via Bank of America (pagos@wondertv.live / 4Ward Studio LLC)
 - `paypal` - USD via PayPal (wondertvpagos@gmail.com)
 - Pago Movil Venezuela: 0412-3947257, Banesco 0134, RIF J-297755527
@@ -142,16 +148,18 @@ Historial de syncs: `status` (success|failed|partial), `total_processed`, `creat
 | Archivo | Funcion |
 |---------|---------|
 | `src/app/api/sync/flujo/route.ts` | Sync SSE con firma RSA dinamica + deteccion Δ creditos |
-| `src/app/api/chat/route.ts` | API del chatbot (Claude Haiku + system prompt completo) |
-| `src/app/api/campaigns/send/route.ts` | Envio de emails via Resend |
-| `src/app/chat/page.tsx` | UI del chatbot publico "Valentina" |
-| `src/app/dashboard/campaigns/page.tsx` | Editor de campanas + templates de email |
-| `src/app/dashboard/conversations/page.tsx` | Historial de conversaciones del bot |
+| `src/app/api/chat/route.ts` | API del chatbot (Claude Haiku + system prompt + downloader dinamico) |
+| `src/app/api/campaigns/send/route.ts` | Envio de emails via Resend (soporta customRecipients) |
+| `src/app/chat/page.tsx` | UI del chatbot publico "Valentina" (dark premium, glassmorphism) |
+| `src/app/dashboard/campaigns/page.tsx` | Editor de campanas + templates de email con precios |
+| `src/app/dashboard/conversations/page.tsx` | Historial de conversaciones del bot con stats |
+| `src/app/dashboard/settings/page.tsx` | Gestion de usuarios + codigo Downloader |
 | `src/components/forms/CompleteSaleForm.tsx` | Completar venta pendiente |
 | `src/components/forms/QuickRechargeForm.tsx` | Recarga manual rapida |
 | `src/lib/utils.ts` | Formateo + `daysUntilExpiration()` (fuente unica de calculo) |
 | `src/lib/types.ts` | Interfaces TypeScript |
 | `src/lib/constants.ts` | Labels, segmentos, tipos de campana |
+| `public/guia-operador.html` | Guia HTML para operadores (11 secciones + alerta Downloader) |
 
 ## Variables de entorno (.env.local + Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -162,7 +170,7 @@ Historial de syncs: `status` (success|failed|partial), `total_processed`, `creat
 - `FROM_EMAIL` - Remitente de emails (Wonder TV <flujo@wondertv.live>)
 
 ## Filtros de clientes
-La tabla de clientes tiene 5 filtros: Todos, Activos, Inactivos, Por vencer (7 dias), Expirados.
+La tabla de clientes tiene 5 filtros: Todos (azul), Activos (verde), Inactivos (gris), Por vencer (naranja), Expirados (rojo).
 - "Por vencer" = activos con flujo_end_date dentro de 7 dias
 - "Expirados" = inactivos + cualquier cliente con dias <= 0
 - La pagina de vencimientos muestra TODOS los clientes con fecha (activos e inactivos), no solo activos
@@ -173,10 +181,13 @@ La tabla de clientes tiene 5 filtros: Todos, Activos, Inactivos, Por vencer (7 d
 - Supabase service role key para API routes (server-side)
 - RLS con funcion `get_my_role()` para evitar recursion
 - Migraciones en `supabase/migration*.sql` (v1 a v8)
-- Calculo de vencimientos centralizado en `daysUntilExpiration()` (utils.ts)
-- Sync preserva phone/email editados manualmente (no sobreescribe)
-- Chatbot: datos del lead se extraen SOLO de mensajes del usuario, no del bot
+- Calculo de vencimientos centralizado en `daysUntilExpiration()` (utils.ts) — Math.ceil((end - now) / 86400000)
+- Sync preserva phone/email editados manualmente (existing.phone || parsed)
+- Chatbot: datos del lead se extraen SOLO de mensajes del usuario (evita capturar datos de empresa)
 - Chatbot: NO usa markdown ** (texto plano, MAYUSCULAS para enfasis)
-- Chatbot: transfiere a WhatsApp SOLO cuando el cliente ya pago o pide humano
-- Emails: boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
+- Chatbot: transfiere a WhatsApp SOLO cuando el cliente ya pago o pide humano. NO antes.
+- Chatbot: codigo Downloader se lee de app_settings en cada request (configurable desde Settings)
+- Emails: boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp directamente)
 - WhatsApp del operador: +58 424-8488722 (solo se revela via el chatbot tras recopilar datos)
+- Logos: usar width/height reales de la imagen fuente (640x640 para logo.png, 180x180 para logo-small.png), controlar tamaño visual con CSS classes (w-36, w-32, etc). No inventar dimensiones o se pixela.
+- Settings: solo gestion de usuarios + codigo Downloader (tasa de cambio eliminada, se ingresa directo en formulario de venta)
