@@ -91,6 +91,39 @@ export interface MonthlyFinancialSummary {
   avg_credits_per_assignment: number
 }
 
+export type CampaignType = 'expiring' | 'reactivation' | 'promotion' | 'welcome'
+export type CampaignStatus = 'draft' | 'sending' | 'sent' | 'failed'
+export type CampaignSegment = 'expiring_7d' | 'expiring_14d' | 'expiring_30d' | 'inactive' | 'active' | 'all' | 'custom'
+
+export interface Campaign {
+  id: string
+  name: string
+  type: CampaignType
+  status: CampaignStatus
+  subject: string
+  html_content: string
+  segment: CampaignSegment
+  custom_client_ids: string[] | null
+  total_recipients: number
+  sent_count: number
+  failed_count: number
+  sent_at: string | null
+  created_by: string | null
+  created_at: string
+  profiles?: Profile
+}
+
+export interface CampaignEmail {
+  id: string
+  campaign_id: string
+  client_id: string
+  email: string
+  status: 'pending' | 'sent' | 'failed'
+  resend_id: string | null
+  error_message: string | null
+  sent_at: string
+}
+
 export interface MonthlyProfitability {
   month: string
   total_cost_usd: number

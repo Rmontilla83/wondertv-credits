@@ -1,0 +1,476 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { useAuth } from '@/components/AuthProvider'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table'
+import { CAMPAIGN_TYPES, CAMPAIGN_SEGMENTS, CAMPAIGN_STATUSES } from '@/lib/constants'
+import { formatDateTime } from '@/lib/utils'
+import { toast } from 'sonner'
+import type { Campaign, Client, CampaignSegment } from '@/lib/types'
+import {
+  AlertTriangle, RefreshCw, Megaphone, PartyPopper,
+  Send, Loader2, Users, Mail, History,
+} from 'lucide-react'
+
+const ICON_MAP: Record<string, typeof AlertTriangle> = {
+  AlertTriangle, RefreshCw, Megaphone, PartyPopper,
+}
+
+const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
+  expiring: {
+    subject: '⚠️ {nombre}, tu servicio Wonder TV vence en {dias} días',
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
+    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+  </div>
+  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
+  <p style="color:#4b5563;font-size:16px;line-height:1.6">Tu servicio de Wonder TV <strong>vence en {dias} días</strong>. No te quedes sin acceso a tus canales favoritos.</p>
+  <div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
+    <p style="margin:0;color:#92400e;font-weight:bold">📅 Renueva ahora y no pierdas ni un día</p>
+  </div>
+  <p style="color:#4b5563">Contáctanos para renovar tu suscripción. ¡Estamos para ayudarte!</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
+</div>`,
+  },
+  reactivation: {
+    subject: '🔄 {nombre}, te extrañamos en Wonder TV',
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
+    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+  </div>
+  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
+  <p style="color:#4b5563;font-size:16px;line-height:1.6">Notamos que tu servicio de Wonder TV expiró. <strong>¡Queremos que vuelvas!</strong></p>
+  <div style="background:#dbeafe;border:1px solid #3b82f6;border-radius:8px;padding:16px;margin:20px 0">
+    <p style="margin:0;color:#1e40af;font-weight:bold">🎉 Reactiva tu servicio y vuelve a disfrutar de todos tus canales</p>
+  </div>
+  <p style="color:#4b5563">Escríbenos y con gusto te ayudamos a reactivar tu cuenta.</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
+</div>`,
+  },
+  promotion: {
+    subject: '🎁 {nombre}, tenemos una oferta especial para ti',
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
+    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+  </div>
+  <h2 style="color:#1f2937">Hola {nombre} 👋</h2>
+  <p style="color:#4b5563;font-size:16px;line-height:1.6">Tenemos una promoción especial que no te puedes perder.</p>
+  <div style="background:#d1fae5;border:1px solid #10b981;border-radius:8px;padding:16px;margin:20px 0">
+    <p style="margin:0;color:#065f46;font-weight:bold">✨ Escríbenos para más detalles</p>
+  </div>
+  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
+</div>`,
+  },
+  welcome: {
+    subject: '🎉 Bienvenido a Wonder TV, {nombre}!',
+    html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+  <div style="text-align:center;padding:20px;background:linear-gradient(135deg,#7c3aed,#6366f1);border-radius:12px;margin-bottom:24px">
+    <h1 style="color:white;margin:0;font-size:24px">Wonder TV</h1>
+  </div>
+  <h2 style="color:#1f2937">¡Bienvenido {nombre}! 🎉</h2>
+  <p style="color:#4b5563;font-size:16px;line-height:1.6">Gracias por unirte a Wonder TV. Ya puedes disfrutar de todos nuestros canales y contenido.</p>
+  <div style="background:#ede9fe;border:1px solid #8b5cf6;border-radius:8px;padding:16px;margin:20px 0">
+    <p style="margin:0;color:#5b21b6;font-weight:bold">📺 Tu usuario IPTV: {usuario}</p>
+  </div>
+  <p style="color:#4b5563">Si necesitas ayuda, no dudes en contactarnos.</p>
+  <p style="color:#9ca3af;font-size:12px;margin-top:32px">— Equipo Wonder TV</p>
+</div>`,
+  },
+}
+
+export default function CampaignsPage() {
+  const { profile, user } = useAuth()
+  const [loading, setLoading] = useState(true)
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [recipientCounts, setRecipientCounts] = useState<Record<string, number>>({})
+
+  // Prepare campaign state
+  const [prepareType, setPrepareType] = useState<string | null>(null)
+  const [segment, setSegment] = useState<CampaignSegment>('expiring_7d')
+  const [subject, setSubject] = useState('')
+  const [htmlContent, setHtmlContent] = useState('')
+  const [previewClients, setPreviewClients] = useState<Pick<Client, 'id' | 'name' | 'email' | 'flujo_login' | 'flujo_end_date' | 'status'>[]>([])
+  const [loadingPreview, setLoadingPreview] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [confirmSend, setConfirmSend] = useState(false)
+
+  const supabase = useMemo(() => createClient(), [])
+
+  // Fetch campaigns history + recipient counts
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const [campaignsRes, clientsRes] = await Promise.all([
+          supabase.from('campaigns').select('*').order('created_at', { ascending: false }).limit(20),
+          supabase.from('clients').select('id, email, status, flujo_end_date').not('email', 'is', null),
+        ])
+
+        if (campaignsRes.data) setCampaigns(campaignsRes.data)
+
+        if (clientsRes.data) {
+          const now = Date.now()
+          const counts: Record<string, number> = {}
+          const active = clientsRes.data.filter(c => c.status === 'active')
+          const inactive = clientsRes.data.filter(c => c.status === 'inactive')
+
+          counts.expiring_7d = active.filter(c => {
+            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            return d !== null && d >= 0 && d <= 7
+          }).length
+          counts.expiring_14d = active.filter(c => {
+            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            return d !== null && d >= 0 && d <= 14
+          }).length
+          counts.expiring_30d = active.filter(c => {
+            const d = c.flujo_end_date ? (new Date(c.flujo_end_date).getTime() - now) / 86400000 : null
+            return d !== null && d >= 0 && d <= 30
+          }).length
+          counts.inactive = inactive.length
+          counts.active = active.length
+          counts.all = clientsRes.data.length
+
+          setRecipientCounts(counts)
+        }
+      } catch (e) {
+        console.error('Error fetching campaigns:', e)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchData()
+  }, [supabase])
+
+  const openPrepare = async (type: string) => {
+    const template = EMAIL_TEMPLATES[type]
+    const defaultSegment: CampaignSegment =
+      type === 'expiring' ? 'expiring_7d' :
+      type === 'reactivation' ? 'inactive' :
+      type === 'welcome' ? 'all' : 'active'
+
+    setPrepareType(type)
+    setSegment(defaultSegment)
+    setSubject(template.subject)
+    setHtmlContent(template.html)
+    await loadPreviewClients(defaultSegment)
+  }
+
+  const loadPreviewClients = async (seg: CampaignSegment) => {
+    setLoadingPreview(true)
+    let query = supabase
+      .from('clients')
+      .select('id, name, email, flujo_login, flujo_end_date, status')
+      .not('email', 'is', null)
+
+    const now = new Date()
+    if (seg === 'inactive') {
+      query = query.eq('status', 'inactive')
+    } else if (seg === 'active') {
+      query = query.eq('status', 'active')
+    } else if (seg.startsWith('expiring_')) {
+      const days = parseInt(seg.replace('expiring_', '').replace('d', ''))
+      query = query
+        .eq('status', 'active')
+        .gte('flujo_end_date', now.toISOString())
+        .lte('flujo_end_date', new Date(now.getTime() + days * 86400000).toISOString())
+    }
+
+    const { data } = await query.order('name').limit(100)
+    setPreviewClients(data || [])
+    setLoadingPreview(false)
+  }
+
+  const handleSegmentChange = async (newSeg: CampaignSegment) => {
+    setSegment(newSeg)
+    await loadPreviewClients(newSeg)
+  }
+
+  const handleSend = async () => {
+    setConfirmSend(false)
+    setSending(true)
+
+    // Create campaign record
+    const { data: campaign, error: createError } = await supabase
+      .from('campaigns')
+      .insert({
+        name: CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label || prepareType,
+        type: prepareType,
+        status: 'draft',
+        subject,
+        html_content: htmlContent,
+        segment,
+        total_recipients: previewClients.length,
+        created_by: user?.id,
+      })
+      .select('id')
+      .single()
+
+    if (createError || !campaign) {
+      toast.error('Error al crear campaña: ' + createError?.message)
+      setSending(false)
+      return
+    }
+
+    // Send via API
+    const resp = await fetch('/api/campaigns/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ campaignId: campaign.id }),
+    })
+
+    const result = await resp.json()
+
+    if (result.success) {
+      toast.success(`Campaña enviada: ${result.sentCount} emails enviados` + (result.failedCount > 0 ? `, ${result.failedCount} fallidos` : ''))
+      // Refresh campaigns list
+      const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false }).limit(20)
+      if (data) setCampaigns(data)
+    } else {
+      toast.error('Error: ' + (result.error || 'desconocido'))
+    }
+
+    setSending(false)
+    setPrepareType(null)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Campañas</h1>
+          <p className="text-sm text-muted-foreground">Envía emails a tus clientes via Resend</p>
+        </div>
+      </div>
+
+      {/* Quick campaign cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {CAMPAIGN_TYPES.map((ct) => {
+          const Icon = ICON_MAP[ct.icon] || Mail
+          const defaultSeg = ct.value === 'expiring' ? 'expiring_7d' : ct.value === 'reactivation' ? 'inactive' : ct.value === 'welcome' ? 'all' : 'active'
+          const count = recipientCounts[defaultSeg] ?? 0
+
+          return (
+            <Card key={ct.value} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${ct.color} mb-3`}>
+                  <Icon className="h-5 w-5" />
+                </div>
+                <h3 className="font-semibold text-sm">{ct.label}</h3>
+                <p className="text-xs text-muted-foreground mt-1">{ct.description}</p>
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    {count} destinatarios
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openPrepare(ct.value)}
+                    disabled={count === 0}
+                  >
+                    Preparar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Prepare campaign modal */}
+      <Dialog open={!!prepareType} onOpenChange={(open) => !open && !sending && setPrepareType(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Segment selector */}
+            <div className="space-y-1">
+              <Label className="text-xs">Segmento</Label>
+              <Select value={segment} onValueChange={(v) => handleSegmentChange(v as CampaignSegment)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CAMPAIGN_SEGMENTS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label} ({recipientCounts[s.value] ?? 0})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Subject */}
+            <div className="space-y-1">
+              <Label className="text-xs">Asunto del email</Label>
+              <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
+              <p className="text-[10px] text-muted-foreground">Variables: {'{nombre}'}, {'{dias}'}, {'{usuario}'}</p>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-1">
+              <Label className="text-xs">Contenido HTML</Label>
+              <Textarea
+                value={htmlContent}
+                onChange={(e) => setHtmlContent(e.target.value)}
+                className="font-mono text-xs h-32"
+              />
+            </div>
+
+            {/* Preview */}
+            <div className="space-y-2">
+              <Label className="text-xs">Preview del email</Label>
+              <div className="border rounded-lg p-4 bg-white max-h-64 overflow-y-auto">
+                <div dangerouslySetInnerHTML={{
+                  __html: htmlContent
+                    .replace(/\{nombre\}/g, 'Juan Pérez')
+                    .replace(/\{dias\}/g, '7')
+                    .replace(/\{usuario\}/g, 'juanp123')
+                    .replace(/\{email\}/g, 'juan@email.com')
+                }} />
+              </div>
+            </div>
+
+            {/* Recipients */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Destinatarios ({previewClients.length})</Label>
+                {loadingPreview && <Loader2 className="h-3 w-3 animate-spin" />}
+              </div>
+              <div className="border rounded-lg max-h-40 overflow-y-auto">
+                {previewClients.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-4">No hay clientes con email en este segmento</p>
+                ) : (
+                  <div className="divide-y">
+                    {previewClients.map((c) => (
+                      <div key={c.id} className="flex items-center justify-between px-3 py-2 text-xs">
+                        <span className="font-medium">{c.name}</span>
+                        <span className="text-muted-foreground">{c.email}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Send button */}
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700"
+              disabled={sending || previewClients.length === 0}
+              onClick={() => setConfirmSend(true)}
+            >
+              {sending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
+              ) : (
+                <><Send className="mr-2 h-4 w-4" />Enviar a {previewClients.length} clientes</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Send confirmation */}
+      <AlertDialog open={confirmSend} onOpenChange={setConfirmSend}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar envío</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Enviar <strong>{previewClients.length} emails</strong> de &quot;{CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}&quot;?
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSend} className="bg-purple-600">
+              Enviar Campaña
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Campaign history */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-5 w-5" />
+            Historial de Campañas
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {campaigns.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No hay campañas enviadas</p>
+          ) : (
+            <div className="rounded-md border overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Campaña</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead className="text-right">Destinatarios</TableHead>
+                    <TableHead className="text-right">Enviados</TableHead>
+                    <TableHead className="text-right">Fallidos</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {campaigns.map((c) => {
+                    const statusInfo = CAMPAIGN_STATUSES.find(s => s.value === c.status)
+                    return (
+                      <TableRow key={c.id}>
+                        <TableCell>
+                          <Badge className={statusInfo?.color}>{statusInfo?.label}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <p className="text-sm font-medium">{c.name}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{c.subject}</p>
+                        </TableCell>
+                        <TableCell className="text-sm whitespace-nowrap">{formatDateTime(c.sent_at || c.created_at)}</TableCell>
+                        <TableCell className="text-right text-sm">{c.total_recipients}</TableCell>
+                        <TableCell className="text-right text-sm">{c.sent_count}</TableCell>
+                        <TableCell className="text-right text-sm">
+                          {c.failed_count > 0 ? <span className="text-red-600 font-medium">{c.failed_count}</span> : '0'}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

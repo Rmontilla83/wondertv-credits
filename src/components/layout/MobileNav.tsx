@@ -19,12 +19,14 @@ import {
   LogOut,
   RefreshCw,
   AlertTriangle,
+  Megaphone,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
+  { name: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone },
   { name: 'Vencimientos', href: '/dashboard/expiring', icon: AlertTriangle },
   { name: 'Finanzas', href: '/dashboard/financials', icon: BarChart3 },
   { name: 'Sync Flujo TV', href: '/dashboard/sync', icon: RefreshCw, adminOnly: true },
