@@ -33,8 +33,29 @@ Resumen de cuentas.
 }
 ```
 
-### GET /codigo?page=1
+### GET /cust/list?page=1&pageSize=30
 Lista de clientes/cuentas (paginado, 30/página).
+Endpoint real descubierto: `/api/v1/magis/cust/list`
+
+**Headers requeridos:**
+- `x-token`: Token de sesión (mismo que cookie `msgistv-token`)
+- `x-sign`: `key={uuid}&secret={base64}&signature={base64}`
+- `x-lang`: `xby`
+
+**Parámetros opcionales de filtro:** `status`, `login_name`, `tipo`, `ip`, `country`, `smartCode`, `start`, `end`, `up`, `user_id`
+
+**Respuesta paginada:**
+```json
+{
+  "code": 200,
+  "data": {
+    "data": [ /* array de cuentas */ ],
+    "count": 390,
+    "page": 1,
+    "total_pages": 13
+  }
+}
+```
 ```json
 {
   "login_name": "sum1954",        // Usuario IPTV
