@@ -31,7 +31,6 @@ export default function ExpiringPage() {
         const { data } = await supabase
           .from('clients')
           .select('*')
-          .eq('status', 'active')
           .not('flujo_end_date', 'is', null)
           .order('flujo_end_date', { ascending: true })
 

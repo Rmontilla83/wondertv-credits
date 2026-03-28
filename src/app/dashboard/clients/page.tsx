@@ -71,6 +71,16 @@ export default function ClientsPage() {
       c.notes?.toLowerCase().includes(q) ||
       c.country?.toLowerCase().includes(q)
 
+    if (statusFilter === 'expiring') {
+      const days = daysUntilExpiration(c.flujo_end_date)
+      return matchesSearch && days !== null && days >= 0 && days <= 7
+    }
+
+    if (statusFilter === 'expired') {
+      const days = daysUntilExpiration(c.flujo_end_date)
+      return matchesSearch && (c.status === 'inactive' || (days !== null && days <= 0))
+    }
+
     const matchesStatus = statusFilter === 'all' || c.status === statusFilter
 
     return matchesSearch && matchesStatus
@@ -81,6 +91,10 @@ export default function ClientsPage() {
   const expiringCount = clients.filter(c => {
     const days = daysUntilExpiration(c.flujo_end_date)
     return days !== null && days >= 0 && days <= 7
+  }).length
+  const expiredCount = clients.filter(c => {
+    const days = daysUntilExpiration(c.flujo_end_date)
+    return c.status === 'inactive' || (days !== null && days <= 0)
   }).length
 
   if (loading) {
@@ -99,7 +113,7 @@ export default function ClientsPage() {
         <div>
           <h1 className="text-2xl font-bold">Clientes</h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {activeCount} activos, {inactiveCount} inactivos
+            {activeCount} activos, {inactiveCount} inactivos, {expiredCount} expirados
             {expiringCount > 0 && <span className="text-orange-600 font-medium"> — {expiringCount} por vencer</span>}
           </p>
         </div>
@@ -121,18 +135,20 @@ export default function ClientsPage() {
             className="pl-9"
           />
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-wrap">
           {[
-            { value: 'all', label: 'Todos' },
-            { value: 'active', label: 'Activos' },
-            { value: 'inactive', label: 'Inactivos' },
+            { value: 'all', label: 'Todos', color: 'bg-blue-600' },
+            { value: 'active', label: 'Activos', color: 'bg-green-600' },
+            { value: 'inactive', label: 'Inactivos', color: 'bg-gray-600' },
+            { value: 'expiring', label: `Por vencer (${expiringCount})`, color: 'bg-orange-600' },
+            { value: 'expired', label: `Expirados (${expiredCount})`, color: 'bg-red-600' },
           ].map(opt => (
             <Button
               key={opt.value}
               variant={statusFilter === opt.value ? 'default' : 'outline'}
               size="sm"
               onClick={() => setStatusFilter(opt.value)}
-              className={statusFilter === opt.value ? 'bg-blue-600' : ''}
+              className={statusFilter === opt.value ? opt.color : ''}
             >
               {opt.label}
             </Button>
