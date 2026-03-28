@@ -44,22 +44,22 @@ const WA_BUTTON = `<div style="text-align:center;margin:28px 0 12px">
   <p style="margin:10px 0 0;color:#6b7280;font-size:13px">+58 424-8488722</p>
 </div>`
 const EMAIL_HEADER = `<div style="text-align:center;padding:24px 20px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px 12px 0 0">
-  <img src="${LOGO_URL}" alt="Wonder TV" width="180" style="max-width:180px;height:auto" />
+  <img src="${LOGO_URL}" alt="Wonder TV (FLUJO)" width="180" style="max-width:180px;height:auto" />
 </div>`
 const EMAIL_FOOTER = `${WA_BUTTON}
 <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
-  <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV &mdash; Tu entretenimiento sin l&iacute;mites</p>
+  <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV (FLUJO) &mdash; Tu entretenimiento sin l&iacute;mites</p>
   <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Este correo fue enviado a {email}</p>
 </div>`
 
 const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
   expiring: {
-    subject: '⚠️ {nombre}, tu servicio Wonder TV vence en {dias} dias',
+    subject: '⚠️ {nombre}, tu servicio Wonder TV (FLUJO) vence en {dias} dias',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
     <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV <strong>vence en {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV (FLUJO) <strong>vence en {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
     <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
       <p style="margin:0;color:#92400e;font-weight:bold;font-size:15px">&#128197; Renueva ahora y no pierdas ni un d&iacute;a</p>
     </div>
@@ -69,12 +69,12 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   reactivation: {
-    subject: '🔄 {nombre}, te extrañamos en Wonder TV',
+    subject: '🔄 {nombre}, te extrañamos en Wonder TV (FLUJO)',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
     <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Notamos que tu servicio de Wonder TV expir&oacute;. <strong>&iexcl;Queremos que vuelvas!</strong></p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Notamos que tu servicio de Wonder TV (FLUJO) expir&oacute;. <strong>&iexcl;Queremos que vuelvas!</strong></p>
     <div style="background:#dbeafe;border-left:4px solid #3b82f6;border-radius:8px;padding:16px;margin:20px 0">
       <p style="margin:0;color:#1e40af;font-weight:bold;font-size:15px">&#127881; Reactiva tu servicio y vuelve a disfrutar de todos tus canales</p>
     </div>
@@ -99,12 +99,12 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   welcome: {
-    subject: '🎉 Bienvenido a Wonder TV, {nombre}!',
+    subject: '🎉 Bienvenido a Wonder TV (FLUJO), {nombre}!',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
     <h2 style="color:#1f2937;margin:0 0 12px">&iexcl;Bienvenido {nombre}! 🎉</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Gracias por unirte a Wonder TV. Ya puedes disfrutar de todos nuestros canales y contenido.</p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Gracias por unirte a Wonder TV (FLUJO). Ya puedes disfrutar de todos nuestros canales y contenido.</p>
     <div style="background:#ede9fe;border-left:4px solid #8b5cf6;border-radius:8px;padding:16px;margin:20px 0">
       <p style="margin:0;color:#5b21b6;font-weight:bold;font-size:15px">&#128250; Tu usuario IPTV: {usuario}</p>
     </div>
@@ -204,6 +204,13 @@ export default function CampaignsPage() {
 
   const loadRecipients = async (seg: CampaignSegment) => {
     setLoadingPreview(true)
+
+    if (seg === 'empty') {
+      setRecipients([])
+      setLoadingPreview(false)
+      return
+    }
+
     let query = supabase
       .from('clients')
       .select('id, name, email, flujo_login, flujo_end_date, status')

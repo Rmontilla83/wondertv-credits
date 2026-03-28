@@ -45,7 +45,8 @@ export const CAMPAIGN_STATUSES: { value: CampaignStatus; label: string; color: s
 ]
 
 export const CAMPAIGN_SEGMENTS: { value: CampaignSegment; label: string; description: string }[] = [
-  { value: 'expiring_7d', label: 'Vencen en 7 días', description: 'Clientes activos con vencimiento próximo' },
+  { value: 'empty', label: 'Vacio (solo manuales)', description: 'Sin destinatarios, agrega emails manualmente' },
+  { value: 'expiring_7d', label: 'Vencen en 7 dias', description: 'Clientes activos con vencimiento proximo' },
   { value: 'expiring_14d', label: 'Vencen en 14 días', description: 'Clientes activos con vencimiento en 2 semanas' },
   { value: 'expiring_30d', label: 'Vencen en 30 días', description: 'Clientes activos con vencimiento en 1 mes' },
   { value: 'inactive', label: 'Inactivos', description: 'Clientes con servicio expirado' },

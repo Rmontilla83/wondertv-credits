@@ -93,7 +93,7 @@ export interface MonthlyFinancialSummary {
 
 export type CampaignType = 'expiring' | 'reactivation' | 'promotion' | 'welcome'
 export type CampaignStatus = 'draft' | 'sending' | 'sent' | 'failed'
-export type CampaignSegment = 'expiring_7d' | 'expiring_14d' | 'expiring_30d' | 'inactive' | 'active' | 'all' | 'custom'
+export type CampaignSegment = 'empty' | 'expiring_7d' | 'expiring_14d' | 'expiring_30d' | 'inactive' | 'active' | 'all' | 'custom'
 
 export interface Campaign {
   id: string
