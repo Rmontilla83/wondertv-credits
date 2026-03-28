@@ -1,15 +1,21 @@
 'use client'
 
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
 import { formatDate, getStatusColor, getStatusLabel } from '@/lib/utils'
+import { toast } from 'sonner'
 import type { Client } from '@/lib/types'
+import { Pencil } from 'lucide-react'
 
 interface ClientsTableProps {
   clients: (Client & { total_credits?: number; last_assignment?: string })[]
+  onClientUpdated?: () => void
 }
 
 function getPassword(deviceInfo: string | null): string {
@@ -18,7 +24,87 @@ function getPassword(deviceInfo: string | null): string {
   return parts.length > 1 ? parts[1] : '-'
 }
 
-export function ClientsTable({ clients }: ClientsTableProps) {
+function EditableCell({
+  value,
+  clientId,
+  field,
+  placeholder,
+  type = 'text',
+  onSaved,
+}: {
+  value: string | null
+  clientId: string
+  field: 'phone' | 'email'
+  placeholder: string
+  type?: string
+  onSaved?: () => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [inputValue, setInputValue] = useState(value || '')
+  const inputRef = useRef<HTMLInputElement>(null)
+  const supabase = useMemo(() => createClient(), [])
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [editing])
+
+  const save = async () => {
+    const trimmed = inputValue.trim()
+    if (trimmed === (value || '')) {
+      setEditing(false)
+      return
+    }
+
+    const { error } = await supabase
+      .from('clients')
+      .update({ [field]: trimmed || null })
+      .eq('id', clientId)
+
+    if (error) {
+      toast.error('Error al guardar')
+      setInputValue(value || '')
+    } else {
+      toast.success(`${field === 'email' ? 'Correo' : 'Teléfono'} actualizado`)
+      onSaved?.()
+    }
+    setEditing(false)
+  }
+
+  if (editing) {
+    return (
+      <Input
+        ref={inputRef}
+        type={type}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onBlur={save}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') save()
+          if (e.key === 'Escape') { setInputValue(value || ''); setEditing(false) }
+        }}
+        className="h-7 text-xs w-full min-w-[140px]"
+        placeholder={placeholder}
+      />
+    )
+  }
+
+  return (
+    <div
+      className="flex items-center gap-1 group cursor-text min-w-[100px]"
+      onClick={(e) => { e.stopPropagation(); setEditing(true) }}
+    >
+      <span className={`text-sm ${value ? '' : 'text-muted-foreground'}`}>
+        {value || '-'}
+      </span>
+      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+    </div>
+  )
+}
+
+export function ClientsTable({ clients, onClientUpdated }: ClientsTableProps) {
   const router = useRouter()
 
   if (clients.length === 0) {
@@ -77,11 +163,25 @@ export function ClientsTable({ clients }: ClientsTableProps) {
               <TableCell className="text-sm max-w-[250px] truncate" title={client.notes || ''}>
                 {client.notes || '-'}
               </TableCell>
-              <TableCell className="text-sm whitespace-nowrap">
-                {client.email || '-'}
+              <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <EditableCell
+                  value={client.email}
+                  clientId={client.id}
+                  field="email"
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  onSaved={onClientUpdated}
+                />
               </TableCell>
-              <TableCell className="text-sm whitespace-nowrap">
-                {client.phone || '-'}
+              <TableCell className="whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <EditableCell
+                  value={client.phone}
+                  clientId={client.id}
+                  field="phone"
+                  type="tel"
+                  placeholder="+58 412 1234567"
+                  onSaved={onClientUpdated}
+                />
               </TableCell>
               <TableCell className="whitespace-nowrap">
                 <Badge className={getStatusColor(client.status)} variant="secondary">
