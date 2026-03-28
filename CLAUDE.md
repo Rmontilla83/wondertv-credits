@@ -87,6 +87,7 @@ Editor full-page con:
 | `/dashboard/sync` | Sync con Flujo TV (progreso real-time + historial) | Admin |
 | `/dashboard/settings` | Usuarios, tasas de cambio | Admin |
 | `/chat` | Chatbot publico "Valentina" (sin auth) | Publico |
+| `/guia-operador.html` | Guia HTML completa para operadores (publica) | Publico |
 
 **Eliminadas**: `/dashboard/assignments` (reemplazada por auto-deteccion en sync)
 
@@ -160,6 +161,13 @@ Historial de syncs: `status` (success|failed|partial), `total_processed`, `creat
 - `RESEND_API_KEY` - Resend para campanas de email
 - `FROM_EMAIL` - Remitente de emails (Wonder TV <flujo@wondertv.live>)
 
+## Filtros de clientes
+La tabla de clientes tiene 5 filtros: Todos, Activos, Inactivos, Por vencer (7 dias), Expirados.
+- "Por vencer" = activos con flujo_end_date dentro de 7 dias
+- "Expirados" = inactivos + cualquier cliente con dias <= 0
+- La pagina de vencimientos muestra TODOS los clientes con fecha (activos e inactivos), no solo activos
+- Campanas solo envian a clientes con email (muchos inactivos no tienen email en el remark)
+
 ## Convenciones
 - Espanol en la UI, ingles en codigo
 - Supabase service role key para API routes (server-side)
@@ -168,5 +176,7 @@ Historial de syncs: `status` (success|failed|partial), `total_processed`, `creat
 - Calculo de vencimientos centralizado en `daysUntilExpiration()` (utils.ts)
 - Sync preserva phone/email editados manualmente (no sobreescribe)
 - Chatbot: datos del lead se extraen SOLO de mensajes del usuario, no del bot
+- Chatbot: NO usa markdown ** (texto plano, MAYUSCULAS para enfasis)
+- Chatbot: transfiere a WhatsApp SOLO cuando el cliente ya pago o pide humano
 - Emails: boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
-- WhatsApp del operador: +58 424-8488722 (solo se revela via el chatbot)
+- WhatsApp del operador: +58 424-8488722 (solo se revela via el chatbot tras recopilar datos)
