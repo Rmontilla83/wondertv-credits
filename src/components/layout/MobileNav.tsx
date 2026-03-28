@@ -59,17 +59,17 @@ export function MobileNav() {
             {pendingCount}
           </span>
         )}
-        <span className="sr-only">Menú</span>
+        <span className="sr-only">Menu</span>
       </SheetTrigger>
       <SheetContent side="left" className="w-72 bg-gray-900 text-white p-0 border-gray-800">
-        <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-        <div className="flex items-center justify-center px-6 py-5 border-b border-gray-800">
+        <SheetTitle className="sr-only">Menu de navegacion</SheetTitle>
+        <div className="flex items-center justify-center px-6 py-4 border-b border-gray-800">
           <Image
-            src="/logo-dark-bg.png"
+            src="/logo.png"
             alt="Wonder TV"
-            width={100}
-            height={100}
-            className="rounded-2xl"
+            width={140}
+            height={35}
+            className="h-9 w-auto"
           />
         </div>
 
@@ -111,7 +111,7 @@ export function MobileNav() {
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-300 hover:bg-gray-800 hover:text-white transition-colors w-full"
           >
             <LogOut className="w-5 h-5" />
-            Cerrar sesión
+            Cerrar sesion
           </button>
         </div>
       </SheetContent>

@@ -30,14 +30,13 @@ export default function LoginPage() {
 
       if (error) {
         setErrorMsg(error.message)
-        toast.error('Error al iniciar sesión', {
+        toast.error('Error al iniciar sesion', {
           description: error.message,
         })
         setLoading(false)
         return
       }
 
-      // Use full page reload to ensure middleware picks up the new cookies
       window.location.href = '/dashboard'
     } catch (err) {
       setErrorMsg(String(err))
@@ -51,22 +50,22 @@ export default function LoginPage() {
         <CardHeader className="text-center space-y-2 pb-2">
           <div className="mx-auto">
             <Image
-              src="/logo-dark-bg.png"
+              src="/logo.png"
               alt="Wonder TV"
-              width={140}
-              height={140}
-              className="mx-auto rounded-3xl"
+              width={200}
+              height={200}
+              className="mx-auto w-[200px] h-auto"
               priority
             />
           </div>
           <p className="text-sm text-gray-400">
-            Control de Créditos IPTV
+            Control de Creditos IPTV
           </p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">Correo electrónico</Label>
+              <Label htmlFor="email" className="text-gray-300">Correo electronico</Label>
               <Input
                 id="email"
                 type="email"
@@ -79,7 +78,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">Contraseña</Label>
+              <Label htmlFor="password" className="text-gray-300">Contrasena</Label>
               <Input
                 id="password"
                 type="password"
@@ -98,10 +97,10 @@ export default function LoginPage() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Iniciando sesión...
+                  Iniciando sesion...
                 </>
               ) : (
-                'Iniciar sesión'
+                'Iniciar sesion'
               )}
             </Button>
           </form>

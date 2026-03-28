@@ -7,6 +7,10 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "Wonder TV - Control de Créditos",
   description: "Sistema de control de inventario de créditos IPTV",
+  icons: {
+    icon: "/logo-small.png",
+    apple: "/logo-small.png",
+  },
 }
 
 export default function RootLayout({
