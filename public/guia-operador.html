@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guia del Operador - Wonder TV Credits</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f0f1a; color: #e2e8f0; line-height: 1.7; }
+
+  .header { background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 40px 20px; text-align: center; }
+  .header img { width: 180px; margin-bottom: 16px; }
+  .header h1 { font-size: 28px; color: white; margin-bottom: 4px; }
+  .header p { color: #a5b4fc; font-size: 14px; }
+
+  .container { max-width: 800px; margin: 0 auto; padding: 32px 20px; }
+
+  .section { margin-bottom: 48px; }
+  .section-number { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: linear-gradient(135deg, #7c3aed, #6366f1); color: white; font-weight: 900; font-size: 16px; border-radius: 50%; margin-right: 12px; }
+  .section h2 { font-size: 22px; color: white; margin-bottom: 16px; display: flex; align-items: center; }
+  .section h3 { font-size: 17px; color: #a78bfa; margin: 24px 0 10px; }
+
+  .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .card.highlight { border-color: #f59e0b; background: rgba(245,158,11,0.08); }
+  .card.success { border-color: #22c55e; background: rgba(34,197,94,0.08); }
+  .card.info { border-color: #6366f1; background: rgba(99,102,241,0.08); }
+  .card.danger { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+
+  .step { display: flex; gap: 16px; margin: 16px 0; }
+  .step-num { width: 28px; height: 28px; background: #7c3aed; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .step-content { flex: 1; }
+  .step-content strong { color: #c4b5fd; }
+
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .badge.orange { background: rgba(249,115,22,0.2); color: #fb923c; }
+  .badge.green { background: rgba(34,197,94,0.2); color: #4ade80; }
+  .badge.purple { background: rgba(139,92,246,0.2); color: #a78bfa; }
+  .badge.blue { background: rgba(59,130,246,0.2); color: #60a5fa; }
+  .badge.red { background: rgba(239,68,68,0.2); color: #f87171; }
+
+  .screenshot { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; margin: 12px 0; font-family: monospace; font-size: 13px; color: #94a3b8; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: rgba(255,255,255,0.05); color: #a78bfa; text-align: left; padding: 10px 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+
+  .divider { height: 1px; background: linear-gradient(90deg, transparent, rgba(139,92,246,0.3), transparent); margin: 40px 0; }
+
+  .tip { display: flex; gap: 10px; padding: 14px; background: rgba(99,102,241,0.1); border-left: 3px solid #6366f1; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; }
+  .tip-icon { font-size: 18px; flex-shrink: 0; }
+
+  .nav-menu { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0; }
+  .nav-item { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; font-size: 13px; }
+  .nav-icon { font-size: 18px; }
+
+  .footer { text-align: center; padding: 40px 20px; color: #64748b; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+  @media (max-width: 600px) {
+    .header h1 { font-size: 22px; }
+    .section h2 { font-size: 18px; }
+    .nav-menu { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo.png" alt="Wonder TV">
+  <h1>Guia del Operador</h1>
+  <p>Wonder TV Credits - Sistema de Gestion IPTV (FLUJO)</p>
+</div>
+
+<div class="container">
+
+<!-- SECCION 1: VENTAS PENDIENTES -->
+<div class="section">
+  <h2><span class="section-number">1</span> Registrar Ventas (Post-Sincronizacion)</h2>
+
+  <p>Cuando el administrador ejecuta una sincronizacion con Flujo TV, el sistema detecta automaticamente los clientes que recibieron creditos nuevos y crea <span class="badge orange">Ventas Pendientes</span>. Tu trabajo es completar la informacion del pago.</p>
+
+  <h3>Como funciona</h3>
+  <div class="card highlight">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content">
+        <strong>Mira el badge naranja en el sidebar</strong><br>
+        Al entrar al sistema, si hay ventas pendientes veras un numero naranja junto a "Dashboard". Ese es tu indicador de que hay trabajo por hacer.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content">
+        <strong>Ve al Dashboard</strong><br>
+        En la parte superior veras una seccion naranja: "X ventas pendientes de registrar". Cada una muestra el nombre del cliente y cuantos creditos se detectaron.
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content">
+        <strong>Haz clic en "Registrar Pago"</strong><br>
+        Se abre un formulario simple donde solo necesitas llenar:
+        <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+          <li><strong>Metodo de pago</strong> (Zelle, PayPal o Banesco BSS)</li>
+          <li><strong>Monto</strong> (en USD o en Bolivares si es Banesco)</li>
+          <li><strong>Referencia</strong> (numero de transaccion)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content">
+        <strong>Si fue cortesia</strong><br>
+        En vez de "Registrar Pago", haz clic en el boton morado "Cortesia". Te pedira el motivo (ej: "Prueba", "Compensacion", "Amigo") y listo.
+      </div>
+    </div>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">💡</span>
+    <span>Las ventas pendientes tambien aparecen en el <strong>detalle de cada cliente</strong> (/dashboard/clients/ID). Si estas en el perfil de un cliente y tiene ventas pendientes, veras la misma alerta naranja ahi.</span>
+  </div>
+
+  <h3>Datos de pago de la empresa</h3>
+  <div class="card info">
+    <table>
+      <tr><th>Metodo</th><th>Datos</th></tr>
+      <tr><td><span class="badge blue">Zelle</span></td><td>pagos@wondertv.live — 4Ward Studio LLC</td></tr>
+      <tr><td><span class="badge green">PayPal</span></td><td>wondertvpagos@gmail.com</td></tr>
+      <tr><td><span class="badge purple">Pago Movil</span></td><td>0412-3947257 — Banesco (0134) — RIF: J-297755527</td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 2: NAVEGACION -->
+<div class="section">
+  <h2><span class="section-number">2</span> Navegacion del Sistema</h2>
+
+  <p>El menu lateral (sidebar) te da acceso a todas las secciones:</p>
+
+  <div class="nav-menu">
+    <div class="nav-item"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">💳</span> Creditos</div>
+    <div class="nav-item"><span class="nav-icon">👥</span> Clientes</div>
+    <div class="nav-item"><span class="nav-icon">📢</span> Campanas</div>
+    <div class="nav-item"><span class="nav-icon">💬</span> Conversaciones</div>
+    <div class="nav-item"><span class="nav-icon">⚠️</span> Vencimientos</div>
+    <div class="nav-item"><span class="nav-icon">📈</span> Finanzas</div>
+    <div class="nav-item"><span class="nav-icon">🔄</span> Sync Flujo TV <span class="badge purple">Admin</span></div>
+    <div class="nav-item"><span class="nav-icon">⚙️</span> Configuracion <span class="badge purple">Admin</span></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 3: DASHBOARD -->
+<div class="section">
+  <h2><span class="section-number">3</span> Dashboard</h2>
+
+  <p>Tu pantalla principal. Aqui ves todo de un vistazo:</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">KPIs (indicadores clave)</h3>
+    <table>
+      <tr><td><span class="badge green">Creditos Disponibles</span></td><td>Cuantos creditos quedan por asignar</td></tr>
+      <tr><td><span class="badge blue">Total Comprados</span></td><td>Total historico de creditos comprados al proveedor</td></tr>
+      <tr><td><span class="badge purple">Asignados Este Mes</span></td><td>Creditos vendidos/asignados en el mes actual</td></tr>
+      <tr><td><span class="badge green">Ingresos del Mes</span></td><td>Dinero recibido este mes (USD)</td></tr>
+      <tr><td><span class="badge purple">Cortesias del Mes</span></td><td>Creditos regalados este mes</td></tr>
+      <tr><td><span class="badge blue">Margen Mensual</span></td><td>Porcentaje de ganancia</td></tr>
+    </table>
+  </div>
+
+  <div class="card highlight">
+    <strong>⚡ Ventas Pendientes</strong><br>
+    <span style="font-size:13px">Si hay ventas detectadas por el sync que aun no tienen pago registrado, aparecen aqui en una seccion naranja prominente. Es lo primero que debes atender.</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 4: CLIENTES -->
+<div class="section">
+  <h2><span class="section-number">4</span> Clientes</h2>
+
+  <p>La tabla de clientes replica el orden del portal Flujo TV:</p>
+
+  <div class="card">
+    <table>
+      <tr><th>Columna</th><th>Descripcion</th></tr>
+      <tr><td>Nombre de Usuario</td><td>Login IPTV del cliente</td></tr>
+      <tr><td>Contrasena</td><td>Clave IPTV del cliente</td></tr>
+      <tr><td>Revendedor</td><td>Siempre "Wonderclass"</td></tr>
+      <tr><td>Fecha de Inicio</td><td>Cuando se activo el servicio</td></tr>
+      <tr><td>Fecha de Finalizacion</td><td>Cuando vence el servicio</td></tr>
+      <tr><td>Total Creditos Contratados</td><td>Meses que tiene el cliente en Flujo TV</td></tr>
+      <tr><td>Pais</td><td>Codigo de pais del cliente</td></tr>
+      <tr><td>Notas</td><td>Informacion adicional (del remark de Flujo TV)</td></tr>
+      <tr><td>Correo Electronico</td><td>✏️ Editable con clic</td></tr>
+      <tr><td>Telefono</td><td>✏️ Editable con clic</td></tr>
+      <tr><td>Estado</td><td>Activo / Inactivo</td></tr>
+    </table>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">✏️</span>
+    <span><strong>Edicion rapida:</strong> Haz clic sobre el correo o telefono de cualquier cliente para editarlo directamente en la tabla. Presiona Enter para guardar o Escape para cancelar. Los datos editados manualmente NO se sobreescriben cuando se sincroniza.</span>
+  </div>
+
+  <h3>Detalle del cliente</h3>
+  <p>Haz clic en cualquier fila para ver el perfil completo del cliente:</p>
+  <ul style="margin: 8px 0 0 20px; font-size: 14px;">
+    <li>Informacion personal y datos de Flujo TV</li>
+    <li>Barra de progreso de vencimiento (verde → amarillo → rojo)</li>
+    <li>Ventas pendientes del cliente (si tiene)</li>
+    <li>Resumen de cuenta (meses, total pagado, cortesias)</li>
+    <li>Historial completo de recargas</li>
+    <li>Boton "Reportar Recarga" para registrar pagos manuales</li>
+  </ul>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 5: CAMPANAS -->
+<div class="section">
+  <h2><span class="section-number">5</span> Campanas de Email</h2>
+
+  <p>Envia emails profesionales a tus clientes con un clic:</p>
+
+  <div class="card">
+    <table>
+      <tr><th>Tipo</th><th>Para que sirve</th><th>Destinatarios</th></tr>
+      <tr>
+        <td><span class="badge orange">Vencimiento</span></td>
+        <td>Recordar a clientes que su servicio esta por vencer</td>
+        <td>Clientes que vencen en 7, 14 o 30 dias</td>
+      </tr>
+      <tr>
+        <td><span class="badge blue">Reactivacion</span></td>
+        <td>Invitar a clientes inactivos a volver</td>
+        <td>Clientes con servicio expirado</td>
+      </tr>
+      <tr>
+        <td><span class="badge green">Promocion</span></td>
+        <td>Enviar ofertas con tabla de precios</td>
+        <td>Activos, todos, o lista personalizada</td>
+      </tr>
+      <tr>
+        <td><span class="badge purple">Bienvenida</span></td>
+        <td>Dar la bienvenida a nuevos clientes</td>
+        <td>Todos los clientes con email</td>
+      </tr>
+    </table>
+  </div>
+
+  <h3>Como enviar una campana</h3>
+  <div class="card success">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content"><strong>Haz clic en el tipo de campana</strong> que quieres enviar</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content"><strong>Revisa el segmento</strong> (puedes cambiarlo) y el asunto del email</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content"><strong>Revisa los destinatarios</strong> en el panel derecho. Puedes:
+        <ul style="margin: 6px 0 0 16px; font-size: 13px;">
+          <li>Eliminar destinatarios individuales (X al pasar el mouse)</li>
+          <li>Agregar uno nuevo (nombre + email)</li>
+          <li>Pegar emails masivos (uno por linea, separados por comas, o formato "Nombre &lt;email&gt;")</li>
+        </ul>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content"><strong>Haz clic en "Enviar Campana"</strong> y confirma</div>
+    </div>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">📝</span>
+    <span><strong>Segmento "Vacio":</strong> Selecciona este segmento para empezar sin destinatarios y agregar solo los que quieras manualmente. Ideal para enviar a listas externas.</span>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 6: CONVERSACIONES -->
+<div class="section">
+  <h2><span class="section-number">6</span> Conversaciones del Bot</h2>
+
+  <p>Nuestro chatbot <strong>"Valentina"</strong> atiende clientes 24/7 en la pagina publica del chat. Aqui puedes ver todas las conversaciones:</p>
+
+  <div class="card">
+    <table>
+      <tr><th>Dato</th><th>Descripcion</th></tr>
+      <tr><td>Nombre del visitante</td><td>Si lo dio durante la conversacion</td></tr>
+      <tr><td>Email / Telefono</td><td>Datos de contacto capturados</td></tr>
+      <tr><td>Plan de interes</td><td>Si pregunto o eligio un plan especifico</td></tr>
+      <tr><td><span class="badge green">WhatsApp</span></td><td>Si fue transferido al operador por WhatsApp</td></tr>
+      <tr><td>Mensajes</td><td>Cantidad de mensajes en la conversacion</td></tr>
+    </table>
+  </div>
+
+  <p style="margin-top:12px">Haz clic en cualquier conversacion para ver el chat completo y contactar al lead si tiene telefono.</p>
+
+  <div class="card info">
+    <strong>📊 KPIs de conversaciones</strong>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li><strong>Total conversaciones</strong> — cuantas personas han chateado</li>
+      <li><strong>Con datos de contacto</strong> — dejaron email o telefono</li>
+      <li><strong>Transferidas a WhatsApp</strong> — llegaron hasta el punto de compra</li>
+      <li><strong>Interesados en plan</strong> — preguntaron o eligieron un plan</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 7: VENCIMIENTOS -->
+<div class="section">
+  <h2><span class="section-number">7</span> Vencimientos</h2>
+
+  <p>Monitorea los clientes que estan por vencer para contactarlos a tiempo:</p>
+
+  <div class="card">
+    <table>
+      <tr><th>Color</th><th>Estado</th></tr>
+      <tr><td><span class="badge red">Rojo</span></td><td>Expirado (vencido)</td></tr>
+      <tr><td><span class="badge orange">Naranja</span></td><td>Vence en 1-7 dias (critico)</td></tr>
+      <tr><td style="color: #eab308">🟡 Amarillo</td><td>Vence en 8-14 dias</td></tr>
+      <tr><td><span class="badge blue">Azul</span></td><td>Vence en 15-30 dias</td></tr>
+    </table>
+  </div>
+
+  <p style="margin-top:12px">Funciones disponibles:</p>
+  <ul style="margin: 8px 0 0 20px; font-size: 14px;">
+    <li>Filtrar por rango de dias, pais, o buscar por nombre</li>
+    <li>Exportar a CSV para campanas externas</li>
+    <li>Clic en un cliente para ir a su perfil y recargar</li>
+  </ul>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 8: SYNC -->
+<div class="section">
+  <h2><span class="section-number">8</span> Sincronizacion con Flujo TV <span class="badge purple">Admin</span></h2>
+
+  <p>La sincronizacion descarga todos los clientes desde el portal Flujo TV y actualiza la base de datos:</p>
+
+  <div class="card">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-content"><strong>Haz clic en "Sincronizar"</strong> — veras una barra de progreso en tiempo real</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-content"><strong>Fase 1 (0-50%)</strong>: Descarga las paginas de Flujo TV</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-content"><strong>Fase 2 (50-100%)</strong>: Actualiza clientes en la base de datos y detecta ventas nuevas</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-content"><strong>Resultado</strong>: Muestra cuantos fueron procesados, nuevos, actualizados, errores y ventas detectadas</div>
+    </div>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">🔗</span>
+    <span>Usa el boton <strong>"IR A PORTAL MASTER"</strong> para abrir el portal de Flujo TV directamente. Si el token expira, haz clic en "Actualizar Token" y pega el nuevo desde las cookies del navegador.</span>
+  </div>
+
+  <p style="margin-top:12px">El historial de sincronizaciones se muestra abajo con: estado (exitosa/fallida/parcial), fecha, duracion, y conteos.</p>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 9: FINANZAS -->
+<div class="section">
+  <h2><span class="section-number">9</span> Finanzas</h2>
+
+  <p>Reportes financieros completos:</p>
+
+  <div class="card">
+    <ul style="margin: 0; padding-left: 20px; font-size: 14px;">
+      <li><strong>Inversion total</strong> — cuanto se ha gastado en comprar creditos</li>
+      <li><strong>Ingresos totales</strong> — cuanto se ha cobrado a clientes</li>
+      <li><strong>Ganancia y margen</strong> — diferencia entre ingresos y costos</li>
+      <li><strong>Grafica P&L mensual</strong> — costos vs ingresos vs ganancia por mes</li>
+      <li><strong>Ganancia acumulada</strong> — tendencia historica</li>
+      <li><strong>Burn rate</strong> — a que ritmo se consumen los creditos y cuando hay que recomprar</li>
+      <li><strong>Desglose por metodo de pago</strong> — cuanto entra por Zelle, PayPal y Banesco</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 10: CHATBOT -->
+<div class="section">
+  <h2><span class="section-number">10</span> Chatbot "Valentina"</h2>
+
+  <p>Nuestro asistente virtual de ventas atiende clientes automaticamente en:</p>
+  <div class="screenshot">wondertv-credits.vercel.app/chat</div>
+
+  <div class="card success">
+    <strong>Que hace Valentina:</strong>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li>Responde preguntas sobre planes, precios, instalacion, metodos de pago y compatibilidad</li>
+      <li>Recopila datos del cliente (nombre, email, telefono, plan de interes)</li>
+      <li>Cuando el cliente esta listo para comprar o ya pago, lo transfiere a WhatsApp con un boton verde</li>
+      <li>El mensaje de WhatsApp llega con todos los datos del cliente pre-escritos</li>
+      <li>Todas las conversaciones quedan guardadas en "Conversaciones" del dashboard</li>
+    </ul>
+  </div>
+
+  <div class="card danger">
+    <strong>⚠️ Importante para el operador:</strong>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li>Los clientes que llegan por WhatsApp desde Valentina ya traen sus datos en el mensaje</li>
+      <li>Revisa el mensaje pre-escrito: trae nombre, email, telefono, plan elegido y metodo de pago</li>
+      <li>Solo necesitas verificar el comprobante de pago y activar/renovar en Flujo TV</li>
+      <li>Si el cliente tiene dudas adicionales, Valentina ya le dio toda la informacion basica</li>
+    </ul>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- SECCION 11: PRECIOS -->
+<div class="section">
+  <h2><span class="section-number">11</span> Tabla de Precios Vigente</h2>
+
+  <div class="card" style="overflow-x:auto">
+    <table>
+      <tr>
+        <th>Plan</th>
+        <th>Precio</th>
+        <th>Original</th>
+        <th>Descuento</th>
+        <th>Meses que recibe</th>
+        <th>Precio/mes</th>
+      </tr>
+      <tr>
+        <td><span class="badge green">Mensual</span></td>
+        <td style="font-weight:900;color:#4ade80">$7.65</td>
+        <td style="text-decoration:line-through;color:#64748b">$9.00</td>
+        <td>15%</td>
+        <td>1 mes</td>
+        <td>$7.65</td>
+      </tr>
+      <tr>
+        <td><span class="badge green">Trimestral</span></td>
+        <td style="font-weight:900;color:#4ade80">$22.95</td>
+        <td style="text-decoration:line-through;color:#64748b">$27.00</td>
+        <td>15%</td>
+        <td>3 meses</td>
+        <td>$7.65</td>
+      </tr>
+      <tr>
+        <td><span class="badge blue">Semestral ⭐</span></td>
+        <td style="font-weight:900;color:#60a5fa">$39.20</td>
+        <td style="text-decoration:line-through;color:#64748b">$49.00</td>
+        <td>20%</td>
+        <td>6 + 1 GRATIS = 7</td>
+        <td>$5.60</td>
+      </tr>
+      <tr>
+        <td><span class="badge purple">Anual 🏆</span></td>
+        <td style="font-weight:900;color:#a78bfa">$69.60</td>
+        <td style="text-decoration:line-through;color:#64748b">$87.00</td>
+        <td>20%</td>
+        <td>12 + 2 GRATIS = 14</td>
+        <td>$4.97</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">💡</span>
+    <span>Siempre empuja el plan <strong>Semestral o Anual</strong>. El argumento: "por menos de $5 al mes tienes 900+ canales, series y peliculas en 3 pantallas".</span>
+  </div>
+</div>
+
+</div>
+
+<div class="footer">
+  <img src="/logo.png" alt="Wonder TV" style="width:100px;opacity:0.5;margin-bottom:12px"><br>
+  Wonder TV Credits &mdash; Guia del Operador<br>
+  Documento interno &mdash; No compartir externamente
+</div>
+
+</body>
+</html>
