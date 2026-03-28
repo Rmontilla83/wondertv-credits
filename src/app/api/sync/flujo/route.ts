@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
 
     const { data: existing } = await adminClient
       .from('clients')
-      .select('id, flujo_credits')
+      .select('id, flujo_credits, phone, email')
       .eq('flujo_cust_id', account.cust_id)
       .maybeSingle()
 
@@ -219,8 +219,8 @@ export async function POST(request: NextRequest) {
         .from('clients')
         .update({
           name,
-          phone,
-          email,
+          phone: existing.phone || phone,
+          email: existing.email || email,
           status,
           flujo_login: account.login_name,
           country: account.country,
