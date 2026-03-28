@@ -85,7 +85,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   promotion: {
-    subject: '🔥 {nombre}, mira estos precios exclusivos de Wonder TV (FLUJO)',
+    subject: '🚨 {nombre}, MEGA OFERTA Wonder TV (FLUJO) desde $4.97/mes - 900+ canales, series y peliculas al precio mas bajo del mercado!',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
