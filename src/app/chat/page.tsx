@@ -31,14 +31,14 @@ export default function ChatPage() {
   // Save conversation to Supabase after each bot response
   const saveConversation = async (msgs: Message[], transferred = false) => {
     const supabase = supabaseRef.current
+    // ONLY extract lead data from USER messages to avoid capturing company info
+    const userText = msgs.filter(m => m.role === 'user').map(m => m.content).join(' ')
+    const emailMatch = userText.match(/[\w.-]+@[\w.-]+\.\w+/)
+    const phoneMatch = userText.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/)
+    const nameMatch = userText.match(/(?:me llamo|soy|nombre[:\s]+)?([A-Z][a-záéíóúñ]+(?:\s[A-Z][a-záéíóúñ]+)+)/i)
+    // Detect plan from both user and bot (bot confirms the plan)
     const fullText = msgs.map(m => m.content).join(' ')
-    const emailMatch = fullText.match(/[\w.-]+@[\w.-]+\.\w+/)
-    const phoneMatch = fullText.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/)
-    // Try to extract name from first user messages
-    const userMsgs = msgs.filter(m => m.role === 'user').map(m => m.content)
-    const nameMatch = fullText.match(/(?:me llamo|soy|nombre[:\s]+)([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)/i)
-    // Detect plan interest
-    const planMatch = fullText.match(/(?:plan|quiero el)\s+(mensual|trimestral|semestral|anual)/i)
+    const planMatch = fullText.match(/(?:plan|quiero el|elegiste|perfecto.*plan)\s+(mensual|trimestral|semestral|anual)/i)
 
     const data = {
       messages: msgs,
