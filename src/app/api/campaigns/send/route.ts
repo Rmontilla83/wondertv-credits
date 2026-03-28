@@ -34,7 +34,7 @@ function getSegmentQuery(segment: string) {
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { campaignId } = body
+  const { campaignId, customRecipients } = body
 
   if (!campaignId) {
     return NextResponse.json({ error: 'campaignId requerido' }, { status: 400 })
@@ -53,29 +53,36 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (campError || !campaign) {
-    return NextResponse.json({ error: 'Campaña no encontrada' }, { status: 404 })
+    return NextResponse.json({ error: 'Campana no encontrada' }, { status: 404 })
   }
 
-  // Get target clients
-  let query = adminClient
-    .from('clients')
-    .select('id, name, email, flujo_login, flujo_end_date, status')
-    .not('email', 'is', null)
+  // Use custom recipients from frontend if provided, otherwise query by segment
+  let clients: { id?: string; name: string; email: string; flujo_login?: string; flujo_end_date?: string }[]
 
-  if (campaign.segment === 'custom' && campaign.custom_client_ids?.length) {
-    query = query.in('id', campaign.custom_client_ids)
+  if (customRecipients && Array.isArray(customRecipients) && customRecipients.length > 0) {
+    clients = customRecipients
   } else {
-    const seg = getSegmentQuery(campaign.segment)
-    if (seg.status_filter) query = query.eq('status', seg.status_filter)
-    if (seg.date_from && seg.date_to) {
-      query = query.gte('flujo_end_date', seg.date_from).lte('flujo_end_date', seg.date_to)
+    let query = adminClient
+      .from('clients')
+      .select('id, name, email, flujo_login, flujo_end_date, status')
+      .not('email', 'is', null)
+
+    if (campaign.segment === 'custom' && campaign.custom_client_ids?.length) {
+      query = query.in('id', campaign.custom_client_ids)
+    } else {
+      const seg = getSegmentQuery(campaign.segment)
+      if (seg.status_filter) query = query.eq('status', seg.status_filter)
+      if (seg.date_from && seg.date_to) {
+        query = query.gte('flujo_end_date', seg.date_from).lte('flujo_end_date', seg.date_to)
+      }
     }
+
+    const { data } = await query
+    clients = data || []
   }
 
-  const { data: clients } = await query
-
-  if (!clients || clients.length === 0) {
-    return NextResponse.json({ error: 'No hay destinatarios con email para este segmento' }, { status: 400 })
+  if (clients.length === 0) {
+    return NextResponse.json({ error: 'No hay destinatarios' }, { status: 400 })
   }
 
   // Mark campaign as sending
@@ -112,26 +119,30 @@ export async function POST(request: NextRequest) {
         html,
       })
 
-      await adminClient.from('campaign_emails').insert({
-        campaign_id: campaignId,
-        client_id: client.id,
-        email: client.email!,
-        status: emailError ? 'failed' : 'sent',
-        resend_id: emailResult?.id || null,
-        error_message: emailError?.message || null,
-      })
+      if (client.id) {
+        await adminClient.from('campaign_emails').insert({
+          campaign_id: campaignId,
+          client_id: client.id,
+          email: client.email,
+          status: emailError ? 'failed' : 'sent',
+          resend_id: emailResult?.id || null,
+          error_message: emailError?.message || null,
+        })
+      }
 
       if (emailError) failedCount++
       else sentCount++
     } catch (e) {
       failedCount++
-      await adminClient.from('campaign_emails').insert({
-        campaign_id: campaignId,
-        client_id: client.id,
-        email: client.email!,
-        status: 'failed',
-        error_message: String(e),
-      })
+      if (client.id) {
+        await adminClient.from('campaign_emails').insert({
+          campaign_id: campaignId,
+          client_id: client.id,
+          email: client.email,
+          status: 'failed',
+          error_message: String(e),
+        })
+      }
     }
   }
 

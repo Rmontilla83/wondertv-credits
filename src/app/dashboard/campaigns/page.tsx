@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
@@ -27,7 +28,7 @@ import { toast } from 'sonner'
 import type { Campaign, Client, CampaignSegment } from '@/lib/types'
 import {
   AlertTriangle, RefreshCw, Megaphone, PartyPopper,
-  Send, Loader2, Users, Mail, History,
+  Send, Loader2, Users, Mail, History, X, Plus, Upload, Eye, Code,
 } from 'lucide-react'
 
 const ICON_MAP: Record<string, typeof AlertTriangle> = {
@@ -114,6 +115,8 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
   },
 }
 
+type Recipient = { id?: string; name: string; email: string }
+
 export default function CampaignsPage() {
   const { profile, user } = useAuth()
   const [loading, setLoading] = useState(true)
@@ -125,14 +128,19 @@ export default function CampaignsPage() {
   const [segment, setSegment] = useState<CampaignSegment>('expiring_7d')
   const [subject, setSubject] = useState('')
   const [htmlContent, setHtmlContent] = useState('')
-  const [previewClients, setPreviewClients] = useState<Pick<Client, 'id' | 'name' | 'email' | 'flujo_login' | 'flujo_end_date' | 'status'>[]>([])
+  const [recipients, setRecipients] = useState<Recipient[]>([])
   const [loadingPreview, setLoadingPreview] = useState(false)
   const [sending, setSending] = useState(false)
   const [confirmSend, setConfirmSend] = useState(false)
+  const [editorTab, setEditorTab] = useState<string>('preview')
+
+  // Add recipients
+  const [addName, setAddName] = useState('')
+  const [addEmail, setAddEmail] = useState('')
+  const [bulkEmails, setBulkEmails] = useState('')
 
   const supabase = useMemo(() => createClient(), [])
 
-  // Fetch campaigns history + recipient counts
   useEffect(() => {
     async function fetchData() {
       try {
@@ -187,10 +195,14 @@ export default function CampaignsPage() {
     setSegment(defaultSegment)
     setSubject(template.subject)
     setHtmlContent(template.html)
-    await loadPreviewClients(defaultSegment)
+    setEditorTab('preview')
+    setAddName('')
+    setAddEmail('')
+    setBulkEmails('')
+    await loadRecipients(defaultSegment)
   }
 
-  const loadPreviewClients = async (seg: CampaignSegment) => {
+  const loadRecipients = async (seg: CampaignSegment) => {
     setLoadingPreview(true)
     let query = supabase
       .from('clients')
@@ -210,21 +222,79 @@ export default function CampaignsPage() {
         .lte('flujo_end_date', new Date(now.getTime() + days * 86400000).toISOString())
     }
 
-    const { data } = await query.order('name').limit(100)
-    setPreviewClients(data || [])
+    const { data } = await query.order('name').limit(500)
+    setRecipients((data || []).map(c => ({ id: c.id, name: c.name, email: c.email! })))
     setLoadingPreview(false)
   }
 
   const handleSegmentChange = async (newSeg: CampaignSegment) => {
     setSegment(newSeg)
-    await loadPreviewClients(newSeg)
+    await loadRecipients(newSeg)
+  }
+
+  const removeRecipient = (index: number) => {
+    setRecipients(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const addSingleRecipient = () => {
+    if (!addEmail.trim() || !addEmail.includes('@')) {
+      toast.error('Email invalido')
+      return
+    }
+    if (recipients.some(r => r.email.toLowerCase() === addEmail.trim().toLowerCase())) {
+      toast.error('Este email ya esta en la lista')
+      return
+    }
+    setRecipients(prev => [...prev, { name: addName.trim() || addEmail.split('@')[0], email: addEmail.trim() }])
+    setAddName('')
+    setAddEmail('')
+    toast.success('Destinatario agregado')
+  }
+
+  const addBulkRecipients = () => {
+    const lines = bulkEmails.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean)
+    const newRecipients: Recipient[] = []
+    const existing = new Set(recipients.map(r => r.email.toLowerCase()))
+    let duplicates = 0
+
+    for (const line of lines) {
+      // Support formats: "email", "name <email>", "name,email", "name;email"
+      let name = ''
+      let email = ''
+
+      const angleMatch = line.match(/^(.+?)\s*<(.+@.+)>$/)
+      if (angleMatch) {
+        name = angleMatch[1].trim()
+        email = angleMatch[2].trim()
+      } else if (line.includes('@')) {
+        email = line.replace(/^["']|["']$/g, '').trim()
+        name = email.split('@')[0]
+      }
+
+      if (!email || !email.includes('@')) continue
+
+      if (existing.has(email.toLowerCase())) {
+        duplicates++
+        continue
+      }
+
+      existing.add(email.toLowerCase())
+      newRecipients.push({ name, email })
+    }
+
+    if (newRecipients.length > 0) {
+      setRecipients(prev => [...prev, ...newRecipients])
+      setBulkEmails('')
+      toast.success(`${newRecipients.length} destinatarios agregados` + (duplicates > 0 ? `, ${duplicates} duplicados omitidos` : ''))
+    } else {
+      toast.error(duplicates > 0 ? `${duplicates} emails ya estaban en la lista` : 'No se encontraron emails validos')
+    }
   }
 
   const handleSend = async () => {
     setConfirmSend(false)
     setSending(true)
 
-    // Create campaign record
     const { data: campaign, error: createError } = await supabase
       .from('campaigns')
       .insert({
@@ -234,30 +304,31 @@ export default function CampaignsPage() {
         subject,
         html_content: htmlContent,
         segment,
-        total_recipients: previewClients.length,
+        total_recipients: recipients.length,
         created_by: user?.id,
       })
       .select('id')
       .single()
 
     if (createError || !campaign) {
-      toast.error('Error al crear campaña: ' + createError?.message)
+      toast.error('Error al crear campana: ' + createError?.message)
       setSending(false)
       return
     }
 
-    // Send via API
     const resp = await fetch('/api/campaigns/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ campaignId: campaign.id }),
+      body: JSON.stringify({
+        campaignId: campaign.id,
+        customRecipients: recipients.map(r => ({ name: r.name, email: r.email })),
+      }),
     })
 
     const result = await resp.json()
 
     if (result.success) {
-      toast.success(`Campaña enviada: ${result.sentCount} emails enviados` + (result.failedCount > 0 ? `, ${result.failedCount} fallidos` : ''))
-      // Refresh campaigns list
+      toast.success(`Campana enviada: ${result.sentCount} emails enviados` + (result.failedCount > 0 ? `, ${result.failedCount} fallidos` : ''))
       const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false }).limit(20)
       if (data) setCampaigns(data)
     } else {
@@ -281,11 +352,9 @@ export default function CampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Campañas</h1>
-          <p className="text-sm text-muted-foreground">Envía emails a tus clientes via Resend</p>
-        </div>
+      <div>
+        <h1 className="text-2xl font-bold">Campanas</h1>
+        <p className="text-sm text-muted-foreground">Envia emails a tus clientes via Resend</p>
       </div>
 
       {/* Quick campaign cards */}
@@ -296,7 +365,7 @@ export default function CampaignsPage() {
           const count = recipientCounts[defaultSeg] ?? 0
 
           return (
-            <Card key={ct.value} className="hover:shadow-md transition-shadow">
+            <Card key={ct.value} className="hover:shadow-md transition-shadow cursor-pointer group" onClick={() => openPrepare(ct.value)}>
               <CardContent className="p-5">
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${ct.color} mb-3`}>
                   <Icon className="h-5 w-5" />
@@ -308,14 +377,9 @@ export default function CampaignsPage() {
                     <Users className="h-3 w-3" />
                     {count} destinatarios
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => openPrepare(ct.value)}
-                    disabled={count === 0}
-                  >
-                    Preparar
-                  </Button>
+                  <span className="text-xs text-purple-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                    Preparar →
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -323,96 +387,170 @@ export default function CampaignsPage() {
         })}
       </div>
 
-      {/* Prepare campaign modal */}
+      {/* Campaign editor - full page dialog */}
       <Dialog open={!!prepareType} onOpenChange={(open) => !open && !sending && setPrepareType(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}
-            </DialogTitle>
+        <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-lg">
+                {CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}
+              </DialogTitle>
+              <Badge variant="secondary" className="text-xs">
+                {recipients.length} destinatarios
+              </Badge>
+            </div>
           </DialogHeader>
 
-          <div className="space-y-4">
-            {/* Segment selector */}
-            <div className="space-y-1">
-              <Label className="text-xs">Segmento</Label>
-              <Select value={segment} onValueChange={(v) => handleSegmentChange(v as CampaignSegment)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CAMPAIGN_SEGMENTS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>
-                      {s.label} ({recipientCounts[s.value] ?? 0})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="flex-1 overflow-hidden flex">
+            {/* Left: Editor */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-5 border-r">
+              {/* Segment */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Segmento base</Label>
+                <Select value={segment} onValueChange={(v) => handleSegmentChange(v as CampaignSegment)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CAMPAIGN_SEGMENTS.map((s) => (
+                      <SelectItem key={s.value} value={s.value}>
+                        {s.label} ({recipientCounts[s.value] ?? 0})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-            {/* Subject */}
-            <div className="space-y-1">
-              <Label className="text-xs">Asunto del email</Label>
-              <Input value={subject} onChange={(e) => setSubject(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground">Variables: {'{nombre}'}, {'{dias}'}, {'{usuario}'}</p>
-            </div>
+              {/* Subject */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Asunto</Label>
+                <Input value={subject} onChange={(e) => setSubject(e.target.value)} className="text-sm" />
+                <p className="text-[10px] text-muted-foreground">Variables: {'{nombre}'}, {'{dias}'}, {'{usuario}'}, {'{email}'}</p>
+              </div>
 
-            {/* Content */}
-            <div className="space-y-1">
-              <Label className="text-xs">Contenido HTML</Label>
-              <Textarea
-                value={htmlContent}
-                onChange={(e) => setHtmlContent(e.target.value)}
-                className="font-mono text-xs h-32"
-              />
-            </div>
-
-            {/* Preview */}
-            <div className="space-y-2">
-              <Label className="text-xs">Preview del email</Label>
-              <div className="border rounded-lg p-4 bg-white max-h-64 overflow-y-auto">
-                <div dangerouslySetInnerHTML={{
-                  __html: htmlContent
-                    .replace(/\{nombre\}/g, 'Juan Pérez')
-                    .replace(/\{dias\}/g, '7')
-                    .replace(/\{usuario\}/g, 'juanp123')
-                    .replace(/\{email\}/g, 'juan@email.com')
-                }} />
+              {/* Content editor with tabs */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contenido</Label>
+                <Tabs value={editorTab} onValueChange={setEditorTab}>
+                  <TabsList className="h-8">
+                    <TabsTrigger value="preview" className="text-xs gap-1"><Eye className="h-3 w-3" />Preview</TabsTrigger>
+                    <TabsTrigger value="code" className="text-xs gap-1"><Code className="h-3 w-3" />HTML</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="preview" className="mt-2">
+                    <div className="border rounded-lg bg-gray-50 p-1">
+                      <div className="bg-white rounded-md overflow-hidden max-h-[400px] overflow-y-auto" dangerouslySetInnerHTML={{
+                        __html: htmlContent
+                          .replace(/\{nombre\}/g, 'Juan Perez')
+                          .replace(/\{dias\}/g, '7')
+                          .replace(/\{usuario\}/g, 'juanp123')
+                          .replace(/\{email\}/g, 'juan@email.com')
+                      }} />
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="code" className="mt-2">
+                    <Textarea
+                      value={htmlContent}
+                      onChange={(e) => setHtmlContent(e.target.value)}
+                      className="font-mono text-xs h-[400px] resize-none"
+                    />
+                  </TabsContent>
+                </Tabs>
               </div>
             </div>
 
-            {/* Recipients */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Destinatarios ({previewClients.length})</Label>
-                {loadingPreview && <Loader2 className="h-3 w-3 animate-spin" />}
+            {/* Right: Recipients */}
+            <div className="w-[380px] shrink-0 flex flex-col overflow-hidden">
+              <div className="p-4 border-b space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Destinatarios
+                  <Badge variant="secondary" className="ml-auto">{recipients.length}</Badge>
+                </h3>
+
+                {/* Add single */}
+                <div className="flex gap-1.5">
+                  <Input
+                    placeholder="Nombre"
+                    value={addName}
+                    onChange={(e) => setAddName(e.target.value)}
+                    className="text-xs h-8"
+                  />
+                  <Input
+                    placeholder="email@ejemplo.com"
+                    type="email"
+                    value={addEmail}
+                    onChange={(e) => setAddEmail(e.target.value)}
+                    className="text-xs h-8 flex-1"
+                    onKeyDown={(e) => e.key === 'Enter' && addSingleRecipient()}
+                  />
+                  <Button size="sm" variant="outline" className="h-8 px-2" onClick={addSingleRecipient}>
+                    <Plus className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+
+                {/* Bulk paste */}
+                <div className="space-y-1.5">
+                  <Textarea
+                    placeholder="Pega emails masivos aqui (uno por linea, separados por comas, o formato Nombre <email>)"
+                    value={bulkEmails}
+                    onChange={(e) => setBulkEmails(e.target.value)}
+                    className="text-xs h-16 resize-none"
+                  />
+                  {bulkEmails.trim() && (
+                    <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={addBulkRecipients}>
+                      <Upload className="h-3 w-3 mr-1" />
+                      Agregar emails masivos
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="border rounded-lg max-h-40 overflow-y-auto">
-                {previewClients.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No hay clientes con email en este segmento</p>
+
+              {/* Recipient list */}
+              <div className="flex-1 overflow-y-auto">
+                {loadingPreview ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : recipients.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-8 px-4">
+                    No hay destinatarios. Cambia el segmento o agrega emails manualmente.
+                  </p>
                 ) : (
                   <div className="divide-y">
-                    {previewClients.map((c) => (
-                      <div key={c.id} className="flex items-center justify-between px-3 py-2 text-xs">
-                        <span className="font-medium">{c.name}</span>
-                        <span className="text-muted-foreground">{c.email}</span>
+                    {recipients.map((r, i) => (
+                      <div key={`${r.email}-${i}`} className="flex items-center gap-2 px-4 py-2 hover:bg-gray-50 group">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate">{r.name}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{r.email}</p>
+                        </div>
+                        <button
+                          onClick={() => removeRecipient(i)}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 p-0.5"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Send button */}
+          {/* Footer */}
+          <div className="px-6 py-4 border-t shrink-0 flex items-center justify-between bg-gray-50">
+            <p className="text-xs text-muted-foreground">
+              {recipients.length} email{recipients.length !== 1 ? 's' : ''} se enviaran con el asunto: <span className="font-medium text-gray-700">{subject.substring(0, 50)}{subject.length > 50 ? '...' : ''}</span>
+            </p>
             <Button
-              className="w-full bg-purple-600 hover:bg-purple-700"
-              disabled={sending || previewClients.length === 0}
+              className="bg-purple-600 hover:bg-purple-700 px-8"
+              disabled={sending || recipients.length === 0}
               onClick={() => setConfirmSend(true)}
             >
               {sending ? (
                 <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
               ) : (
-                <><Send className="mr-2 h-4 w-4" />Enviar a {previewClients.length} clientes</>
+                <><Send className="mr-2 h-4 w-4" />Enviar Campana</>
               )}
             </Button>
           </div>
@@ -423,16 +561,16 @@ export default function CampaignsPage() {
       <AlertDialog open={confirmSend} onOpenChange={setConfirmSend}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar envío</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar envio</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Enviar <strong>{previewClients.length} emails</strong> de &quot;{CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}&quot;?
-              Esta acción no se puede deshacer.
+              Enviar <strong>{recipients.length} emails</strong> de &quot;{CAMPAIGN_TYPES.find(t => t.value === prepareType)?.label}&quot;?
+              Esta accion no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleSend} className="bg-purple-600">
-              Enviar Campaña
+              Enviar Campana
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -443,19 +581,19 @@ export default function CampaignsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <History className="h-5 w-5" />
-            Historial de Campañas
+            Historial de Campanas
           </CardTitle>
         </CardHeader>
         <CardContent>
           {campaigns.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">No hay campañas enviadas</p>
+            <p className="text-sm text-muted-foreground text-center py-8">No hay campanas enviadas</p>
           ) : (
             <div className="rounded-md border overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Campaña</TableHead>
+                    <TableHead>Campana</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Destinatarios</TableHead>
                     <TableHead className="text-right">Enviados</TableHead>
