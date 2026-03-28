@@ -20,6 +20,7 @@ import {
   RefreshCw,
   AlertTriangle,
   Megaphone,
+  MessageCircle,
 } from 'lucide-react'
 
 const navigation = [
@@ -27,6 +28,7 @@ const navigation = [
   { name: 'Créditos', href: '/dashboard/credits', icon: CreditCard },
   { name: 'Clientes', href: '/dashboard/clients', icon: Users },
   { name: 'Campañas', href: '/dashboard/campaigns', icon: Megaphone },
+  { name: 'Conversaciones', href: '/dashboard/conversations', icon: MessageCircle },
   { name: 'Vencimientos', href: '/dashboard/expiring', icon: AlertTriangle },
   { name: 'Finanzas', href: '/dashboard/financials', icon: BarChart3 },
   { name: 'Sync Flujo TV', href: '/dashboard/sync', icon: RefreshCw, adminOnly: true },

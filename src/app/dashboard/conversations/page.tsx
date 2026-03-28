@@ -1,0 +1,234 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle,
+} from '@/components/ui/dialog'
+import { formatDateTime } from '@/lib/utils'
+import { MessageCircle, User, Mail, Phone, ShoppingCart, ArrowRight, ExternalLink } from 'lucide-react'
+
+interface Conversation {
+  id: string
+  messages: { role: 'user' | 'assistant'; content: string }[]
+  lead_name: string | null
+  lead_email: string | null
+  lead_phone: string | null
+  plan_interest: string | null
+  transferred_to_whatsapp: boolean
+  message_count: number
+  last_message_at: string
+  created_at: string
+}
+
+export default function ConversationsPage() {
+  const [loading, setLoading] = useState(true)
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [selected, setSelected] = useState<Conversation | null>(null)
+  const supabase = useMemo(() => createClient(), [])
+
+  useEffect(() => {
+    supabase
+      .from('chat_conversations')
+      .select('*')
+      .order('last_message_at', { ascending: false })
+      .limit(50)
+      .then(({ data }) => {
+        if (data) setConversations(data)
+        setLoading(false)
+      })
+  }, [supabase])
+
+  const stats = {
+    total: conversations.length,
+    withContact: conversations.filter(c => c.lead_email || c.lead_phone).length,
+    transferred: conversations.filter(c => c.transferred_to_whatsapp).length,
+    withPlan: conversations.filter(c => c.plan_interest).length,
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <div className="grid grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-24" />)}
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Conversaciones del Bot</h1>
+        <p className="text-sm text-muted-foreground">Historial de chats con Valentina</p>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-xs text-muted-foreground">Conversaciones</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-blue-600">{stats.withContact}</p>
+            <p className="text-xs text-muted-foreground">Con datos de contacto</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-green-600">{stats.transferred}</p>
+            <p className="text-xs text-muted-foreground">Transferidas a WhatsApp</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-purple-600">{stats.withPlan}</p>
+            <p className="text-xs text-muted-foreground">Interesados en plan</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Conversations list */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageCircle className="h-5 w-5" />
+            Ultimas conversaciones
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {conversations.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No hay conversaciones aun</p>
+          ) : (
+            <div className="space-y-2">
+              {conversations.map((conv) => {
+                const firstUserMsg = conv.messages.find(m => m.role === 'user')?.content || ''
+                const preview = firstUserMsg.substring(0, 80) + (firstUserMsg.length > 80 ? '...' : '')
+
+                return (
+                  <div
+                    key={conv.id}
+                    onClick={() => setSelected(conv)}
+                    className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shrink-0">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-medium truncate">
+                          {conv.lead_name || 'Visitante'}
+                        </p>
+                        {conv.transferred_to_whatsapp && (
+                          <Badge className="bg-green-100 text-green-700 text-[10px]">WhatsApp</Badge>
+                        )}
+                        {conv.plan_interest && (
+                          <Badge className="bg-purple-100 text-purple-700 text-[10px]">{conv.plan_interest}</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{preview}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        {conv.lead_email && (
+                          <span className="text-[10px] text-blue-500 flex items-center gap-0.5">
+                            <Mail className="h-2.5 w-2.5" />{conv.lead_email}
+                          </span>
+                        )}
+                        {conv.lead_phone && (
+                          <span className="text-[10px] text-green-500 flex items-center gap-0.5">
+                            <Phone className="h-2.5 w-2.5" />{conv.lead_phone}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs text-muted-foreground">{formatDateTime(conv.last_message_at)}</p>
+                      <p className="text-[10px] text-muted-foreground">{conv.message_count} mensajes</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Conversation detail modal */}
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent className="sm:!max-w-[600px] h-[80vh] flex flex-col !p-0 !gap-0">
+          <DialogHeader className="px-5 py-4 border-b shrink-0">
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <User className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">{selected?.lead_name || 'Visitante'}</p>
+                <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-normal">
+                  {selected?.lead_email && <span>{selected.lead_email}</span>}
+                  {selected?.lead_phone && <span>{selected.lead_phone}</span>}
+                  {!selected?.lead_email && !selected?.lead_phone && <span>Sin datos de contacto</span>}
+                </div>
+              </div>
+            </DialogTitle>
+            {(selected?.plan_interest || selected?.transferred_to_whatsapp) && (
+              <div className="flex gap-2 mt-2">
+                {selected.plan_interest && (
+                  <Badge variant="secondary" className="text-xs gap-1">
+                    <ShoppingCart className="h-3 w-3" />Plan: {selected.plan_interest}
+                  </Badge>
+                )}
+                {selected.transferred_to_whatsapp && (
+                  <Badge className="bg-green-100 text-green-700 text-xs gap-1">
+                    <ArrowRight className="h-3 w-3" />Transferido a WhatsApp
+                  </Badge>
+                )}
+              </div>
+            )}
+          </DialogHeader>
+
+          {/* Chat replay */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3 bg-gray-50">
+            {selected?.messages.map((msg, i) => {
+              const displayText = msg.content.replace(/\[WHATSAPP:.+?\]/g, '').trim()
+              return (
+                <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`max-w-[80%] px-3.5 py-2.5 text-sm ${
+                    msg.role === 'user'
+                      ? 'bg-purple-600 text-white rounded-2xl rounded-br-sm'
+                      : 'bg-white text-gray-800 rounded-2xl rounded-bl-sm border shadow-sm'
+                  }`}>
+                    <p className="whitespace-pre-line leading-relaxed text-[13px]">{displayText}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between text-xs text-muted-foreground">
+            <span>{selected?.message_count} mensajes — {selected && formatDateTime(selected.created_at)}</span>
+            {(selected?.lead_phone || selected?.lead_email) && (
+              <a
+                href={`https://wa.me/${selected?.lead_phone?.replace(/\D/g, '') || ''}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button size="sm" variant="outline" className="text-xs gap-1">
+                  <ExternalLink className="h-3 w-3" />Contactar
+                </Button>
+              </a>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
