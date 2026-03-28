@@ -38,22 +38,16 @@ const ICON_MAP: Record<string, typeof AlertTriangle> = {
 const LOGO_URL = 'https://wondertv-credits.vercel.app/logo.png'
 const CHAT_URL = 'https://wondertv-credits.vercel.app/chat'
 const WA_NUMBER = '584248488722'
-const WA_BUTTON = `<div style="text-align:center;margin:28px 0 8px">
-  <a href="${CHAT_URL}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6366f1);color:white;font-size:17px;font-weight:bold;padding:16px 36px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(124,58,237,0.4);margin-bottom:10px">
-    &#128172;&nbsp;&nbsp;Chatea con Valentina
+const CTA_BUTTON = `<div style="text-align:center;margin:28px 0 8px">
+  <a href="${CHAT_URL}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:18px;font-weight:bold;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(37,211,102,0.4)">
+    &#128172;&nbsp;&nbsp;Escr&iacute;benos ahora
   </a>
-  <p style="margin:8px 0 0;color:#6b7280;font-size:12px">Nuestra asesora te atiende al instante</p>
-  <div style="margin:14px 0 0">
-    <a href="https://wa.me/${WA_NUMBER}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:14px;font-weight:bold;padding:12px 28px;border-radius:50px;text-decoration:none;box-shadow:0 3px 10px rgba(37,211,102,0.3)">
-      &#9742;&nbsp;&nbsp;O escr&iacute;benos por WhatsApp
-    </a>
-    <p style="margin:6px 0 0;color:#9ca3af;font-size:11px">+58 424-8488722</p>
-  </div>
+  <p style="margin:10px 0 0;color:#6b7280;font-size:12px">Te respondemos al instante</p>
 </div>`
 const EMAIL_HEADER = `<div style="text-align:center;padding:24px 20px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px 12px 0 0">
   <img src="${LOGO_URL}" alt="Wonder TV (FLUJO)" width="180" style="max-width:180px;height:auto" />
 </div>`
-const EMAIL_FOOTER = `${WA_BUTTON}
+const EMAIL_FOOTER = `${CTA_BUTTON}
 <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
   <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV (FLUJO) &mdash; Tu entretenimiento sin l&iacute;mites</p>
   <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Este correo fue enviado a {email}</p>
