@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { RefreshCw, CheckCircle, AlertTriangle, Upload, Loader2, Zap, Key, Save } from 'lucide-react'
+import { RefreshCw, CheckCircle, AlertTriangle, Upload, Loader2, Zap, Key, Save, ExternalLink } from 'lucide-react'
 
 interface SyncResult {
   created: number
@@ -150,7 +150,15 @@ export default function SyncPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Sincronización Flujo TV</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Sincronización Flujo TV</h1>
+        <a href="https://vip.flujotv.net/jeesite/a/sys-cust-list" target="_blank" rel="noopener noreferrer">
+          <Button className="bg-purple-600 hover:bg-purple-700">
+            <ExternalLink className="mr-2 h-4 w-4" />
+            IR A PORTAL MASTER
+          </Button>
+        </a>
+      </div>
 
       {/* AUTO SYNC */}
       <Card className="border-blue-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
