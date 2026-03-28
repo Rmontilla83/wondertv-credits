@@ -6,7 +6,6 @@ import { createClient } from '@/lib/supabase/client'
 import { ClientsTable } from '@/components/tables/ClientsTable'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { Client } from '@/lib/types'
 import { Plus, Search } from 'lucide-react'
@@ -26,7 +25,7 @@ export default function ClientsPage() {
         const { data: clientsData } = await supabase
           .from('clients')
           .select('*')
-          .order('name')
+          .order('flujo_start_date', { ascending: false, nullsFirst: false })
 
         if (clientsData) {
           const { data: creditData } = await supabase
@@ -62,11 +61,14 @@ export default function ClientsPage() {
   }, [supabase])
 
   const filteredClients = clients.filter((c) => {
+    const q = search.toLowerCase()
     const matchesSearch = !search ||
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone?.toLowerCase().includes(search.toLowerCase()) ||
-      c.email?.toLowerCase().includes(search.toLowerCase()) ||
-      c.flujo_login?.toLowerCase().includes(search.toLowerCase())
+      c.name.toLowerCase().includes(q) ||
+      c.phone?.toLowerCase().includes(q) ||
+      c.email?.toLowerCase().includes(q) ||
+      c.flujo_login?.toLowerCase().includes(q) ||
+      c.notes?.toLowerCase().includes(q) ||
+      c.country?.toLowerCase().includes(q)
 
     const matchesStatus = statusFilter === 'all' || c.status === statusFilter
 
@@ -96,13 +98,10 @@ export default function ClientsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Clientes</h1>
-          <div className="flex gap-2 mt-1">
-            <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">{activeCount} activos</Badge>
-            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600">{inactiveCount} inactivos</Badge>
-            {expiringCount > 0 && (
-              <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">{expiringCount} por vencer</Badge>
-            )}
-          </div>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {activeCount} activos, {inactiveCount} inactivos
+            {expiringCount > 0 && <span className="text-orange-600 font-medium"> — {expiringCount} por vencer</span>}
+          </p>
         </div>
         <Link href="/dashboard/clients/new">
           <Button className="bg-blue-600 hover:bg-blue-700">
