@@ -4,8 +4,12 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Wonder TV <noreply@wondertv.com>'
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error('RESEND_API_KEY no configurado')
+  return new Resend(key)
+}
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Wonder TV <flujo@wondertv.live>'
 
 function getSegmentQuery(segment: string) {
   const now = new Date()
@@ -100,6 +104,7 @@ export async function POST(request: NextRequest) {
       .replace(/\{dias\}/g, String(daysLeft ?? ''))
 
     try {
+      const resend = getResend()
       const { data: emailResult, error: emailError } = await resend.emails.send({
         from: FROM_EMAIL,
         to: client.email!,
