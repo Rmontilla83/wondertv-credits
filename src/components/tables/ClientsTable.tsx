@@ -40,6 +40,7 @@ function EditableCell({
   onSaved?: () => void
 }) {
   const [editing, setEditing] = useState(false)
+  const [displayValue, setDisplayValue] = useState(value || '')
   const [inputValue, setInputValue] = useState(value || '')
   const inputRef = useRef<HTMLInputElement>(null)
   const supabase = useMemo(() => createClient(), [])
@@ -65,8 +66,9 @@ function EditableCell({
 
     if (error) {
       toast.error('Error al guardar')
-      setInputValue(value || '')
+      setInputValue(displayValue)
     } else {
+      setDisplayValue(trimmed)
       toast.success(`${field === 'email' ? 'Correo' : 'Teléfono'} actualizado`)
       onSaved?.()
     }
@@ -83,7 +85,7 @@ function EditableCell({
         onBlur={save}
         onKeyDown={(e) => {
           if (e.key === 'Enter') save()
-          if (e.key === 'Escape') { setInputValue(value || ''); setEditing(false) }
+          if (e.key === 'Escape') { setInputValue(displayValue); setEditing(false) }
         }}
         className="h-7 text-xs w-full min-w-[140px]"
         placeholder={placeholder}
@@ -96,8 +98,8 @@ function EditableCell({
       className="flex items-center gap-1 group cursor-text min-w-[100px]"
       onClick={(e) => { e.stopPropagation(); setEditing(true) }}
     >
-      <span className={`text-sm ${value ? '' : 'text-muted-foreground'}`}>
-        {value || '-'}
+      <span className={`text-sm ${displayValue ? '' : 'text-muted-foreground'}`}>
+        {displayValue || '-'}
       </span>
       <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
     </div>
