@@ -100,6 +100,7 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json().catch(() => ({}))
   const token = body.token || process.env.FLUJO_TOKEN
+  const syncUserId = body.userId || null
 
   if (!token) {
     return NextResponse.json(
@@ -129,6 +130,18 @@ export async function POST(request: NextRequest) {
       let errors = 0
       let pendingSales = 0
       let errorMessage: string | null = null
+
+      // Resolve assigned_by: use provided userId or fallback to first admin
+      let assignedBy = syncUserId
+      if (!assignedBy) {
+        const { data: admin } = await adminClient
+          .from('profiles')
+          .select('id')
+          .eq('role', 'admin')
+          .limit(1)
+          .single()
+        assignedBy = admin?.id || null
+      }
 
       try {
         // Phase 1: Fetch first page
@@ -193,6 +206,7 @@ export async function POST(request: NextRequest) {
                 .from('credit_assignments')
                 .insert({
                   client_id: existing.id,
+                  assigned_by: assignedBy,
                   quantity: delta,
                   period_start: account.start_date ? new Date(account.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
                   period_end: account.end_date ? new Date(account.end_date).toISOString().split('T')[0] : null,
@@ -223,7 +237,7 @@ export async function POST(request: NextRequest) {
             if (error) { errors++; console.error('Update error:', error.message) }
             else updated++
           } else {
-            const { error } = await adminClient
+            const { data: newClient, error } = await adminClient
               .from('clients')
               .insert({
                 name, phone, email, status,
@@ -236,8 +250,28 @@ export async function POST(request: NextRequest) {
                 flujo_credits: account.credit,
                 notes: account.remark,
               })
+              .select('id')
+              .single()
             if (error) { errors++; console.error('Insert error:', error.message) }
-            else created++
+            else {
+              created++
+              // New client with credits = sale to register
+              if (account.credit > 0 && newClient) {
+                const { error: saleError } = await adminClient
+                  .from('credit_assignments')
+                  .insert({
+                    client_id: newClient.id,
+                    assigned_by: assignedBy,
+                    quantity: account.credit,
+                    period_start: account.start_date ? new Date(account.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                    period_end: account.end_date ? new Date(account.end_date).toISOString().split('T')[0] : null,
+                    is_courtesy: false,
+                    payment_status: 'pending',
+                    notes: `Auto-detectado: cliente nuevo con ${account.credit} créditos`,
+                  })
+                if (!saleError) pendingSales++
+              }
+            }
           }
 
           // Send progress every 20 clients

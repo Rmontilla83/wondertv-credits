@@ -93,6 +93,7 @@ export default function SyncPage() {
     try {
       const body: Record<string, string> = {}
       if (flujoToken) body.token = flujoToken
+      if (profile?.id) body.userId = profile.id
 
       const resp = await fetch('/api/sync/flujo', {
         method: 'POST',
