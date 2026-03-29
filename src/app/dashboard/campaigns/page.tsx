@@ -35,8 +35,8 @@ const ICON_MAP: Record<string, typeof AlertTriangle> = {
   AlertTriangle, RefreshCw, Megaphone, PartyPopper,
 }
 
-const LOGO_URL = 'https://wondertv-credits.vercel.app/logo.png'
-const CHAT_URL = 'https://wondertv-credits.vercel.app/chat'
+const LOGO_URL = 'https://wondertv.live/logo.png'
+const CHAT_URL = 'https://wondertv.live/chat'
 const WA_NUMBER = '584248488722'
 const CTA_BUTTON = `<div style="text-align:center;margin:28px 0 8px">
   <a href="${CHAT_URL}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:18px;font-weight:bold;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(37,211,102,0.4)">
