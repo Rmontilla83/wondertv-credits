@@ -46,9 +46,9 @@ export const CAMPAIGN_STATUSES: { value: CampaignStatus; label: string; color: s
 
 export const CAMPAIGN_SEGMENTS: { value: CampaignSegment; label: string; description: string }[] = [
   { value: 'empty', label: 'Vacio (solo manuales)', description: 'Sin destinatarios, agrega emails manualmente' },
-  { value: 'expiring_7d', label: 'Vencen en 7 dias', description: 'Clientes activos con vencimiento proximo' },
-  { value: 'expiring_14d', label: 'Vencen en 14 días', description: 'Clientes activos con vencimiento en 2 semanas' },
-  { value: 'expiring_30d', label: 'Vencen en 30 días', description: 'Clientes activos con vencimiento en 1 mes' },
+  { value: 'expiring_7d', label: 'Vencen en menos de 7 dias', description: 'Clientes activos con email que vencen en menos de 7 dias' },
+  { value: 'expiring_14d', label: 'Vencen en menos de 14 dias', description: 'Clientes activos con email que vencen en menos de 14 dias' },
+  { value: 'expiring_30d', label: 'Vencen en menos de 30 dias', description: 'Clientes activos con email que vencen en menos de 30 dias' },
   { value: 'inactive', label: 'Inactivos', description: 'Clientes con servicio expirado' },
   { value: 'active', label: 'Todos los activos', description: 'Clientes con servicio vigente' },
   { value: 'all', label: 'Todos', description: 'Todos los clientes con email' },

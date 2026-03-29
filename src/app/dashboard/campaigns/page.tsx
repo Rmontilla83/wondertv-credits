@@ -55,12 +55,12 @@ const EMAIL_FOOTER = `${CTA_BUTTON}
 
 const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
   expiring: {
-    subject: '⚠️ {nombre}, tu servicio Wonder TV (FLUJO) vence en {dias} dias',
+    subject: '⚠️ {nombre}, tu servicio Wonder TV (FLUJO) vence pronto',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
     <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV (FLUJO) <strong>vence en {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV (FLUJO) <strong>vence en menos de {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
     <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
       <p style="margin:0;color:#92400e;font-weight:bold;font-size:15px">&#128197; Renueva ahora y no pierdas ni un d&iacute;a</p>
     </div>
