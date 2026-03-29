@@ -76,7 +76,7 @@
 <div class="section">
   <h2><span class="section-number">1</span> Registrar Ventas (Post-Sincronizacion)</h2>
 
-  <p>Cuando el administrador ejecuta una sincronizacion con Flujo TV, el sistema detecta automaticamente los clientes que recibieron creditos nuevos y crea <span class="badge orange">Ventas Pendientes</span>. Tu trabajo es completar la informacion del pago.</p>
+  <p>Cuando el administrador ejecuta una sincronizacion con Flujo TV, el sistema detecta automaticamente las ventas: tanto <strong>clientes existentes que recibieron creditos nuevos</strong> como <strong>clientes nuevos que aparecen con creditos</strong>. En ambos casos se crea una <span class="badge orange">Venta Pendiente</span>. Tu trabajo es completar la informacion del pago.</p>
 
   <h3>Como funciona</h3>
   <div class="card highlight">
@@ -284,6 +284,11 @@
     <span class="tip-icon">📝</span>
     <span><strong>Segmento "Vacio":</strong> Selecciona este segmento para empezar sin destinatarios y agregar solo los que quieras manualmente. Ideal para enviar a listas externas.</span>
   </div>
+
+  <div class="tip">
+    <span class="tip-icon">🤖</span>
+    <span><strong>Segmento "Leads del Chatbot":</strong> Prospectos que dejaron su email en el chat con Valentina pero aun no son clientes. Ideal para campanas de seguimiento o promocion a leads frios. El sistema excluye automaticamente a los que ya se convirtieron en clientes.</span>
+  </div>
 </div>
 
 <div class="divider"></div>
@@ -292,7 +297,7 @@
 <div class="section">
   <h2><span class="section-number">6</span> Conversaciones del Bot</h2>
 
-  <p>Nuestro chatbot <strong>"Valentina"</strong> atiende clientes 24/7 en la pagina publica del chat. Aqui puedes ver todas las conversaciones:</p>
+  <p>Nuestro chatbot <strong>"Valentina"</strong> atiende clientes 24/7 en <strong>wondertv.live/chat</strong>. Aqui puedes ver todas las conversaciones:</p>
 
   <div class="card">
     <table>
@@ -308,13 +313,39 @@
   <p style="margin-top:12px">Haz clic en cualquier conversacion para ver el chat completo y contactar al lead si tiene telefono.</p>
 
   <div class="card info">
-    <strong>📊 KPIs de conversaciones</strong>
+    <strong>📊 KPIs y Embudo de Conversion</strong>
     <ul style="margin: 8px 0 0 20px; font-size: 13px;">
       <li><strong>Total conversaciones</strong> — cuantas personas han chateado</li>
-      <li><strong>Con datos de contacto</strong> — dejaron email o telefono</li>
-      <li><strong>Transferidas a WhatsApp</strong> — llegaron hasta el punto de compra</li>
+      <li><strong>Con contacto (X%)</strong> — dejaron email o telefono (tasa de captura)</li>
+      <li><strong>A WhatsApp (X%)</strong> — transferidas al operador (tasa de conversion)</li>
       <li><strong>Interesados en plan</strong> — preguntaron o eligieron un plan</li>
+      <li><strong>Leads calientes</strong> — tienen plan + contacto pero NO transfirieron a WhatsApp (requieren seguimiento)</li>
+      <li><strong>Tasa de conversion</strong> — porcentaje de conversaciones que llegan a WhatsApp</li>
     </ul>
+  </div>
+
+  <div class="card highlight">
+    <strong>🔥 Alerta de Leads Calientes</strong>
+    <p style="font-size:13px;margin-top:6px">Si hay leads que mostraron interes en un plan y dejaron datos de contacto, pero NO fueron transferidos a WhatsApp, aparecen en una seccion naranja. Desde ahi puedes:</p>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li><strong>Enviar Valentina</strong> — abre WhatsApp con un mensaje pre-escrito que incluye el link del chat para que el lead se atienda</li>
+      <li><strong>Ver chat</strong> — revisa la conversacion para entender que necesita el cliente</li>
+    </ul>
+  </div>
+
+  <h3>Compartir link de Valentina</h3>
+  <div class="card success">
+    <p style="font-size:13px">Cuando llegue una venta nueva que no puedas atender en el momento, o un cliente necesite soporte, puedes enviarle el link de Valentina:</p>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li><strong>"Copiar link de Valentina"</strong> — copia la URL wondertv.live/chat al portapapeles para pegarla donde quieras</li>
+      <li><strong>"Enviar por WhatsApp"</strong> — te pide el numero del cliente y abre WhatsApp con un mensaje que dice: "Te comparto el link de nuestra asesora virtual Valentina para que te atienda al instante" + el link</li>
+      <li><strong>"Enviar Valentina"</strong> (en el detalle de cada conversacion) — envia el link directamente al lead si tiene telefono</li>
+    </ul>
+  </div>
+
+  <div class="tip">
+    <span class="tip-icon">💡</span>
+    <span><strong>Uso recomendado:</strong> Cuando estes ocupado y llegue un cliente nuevo por WhatsApp, respondele: "Hola! Te paso con nuestra asesora virtual que te atiende al instante" y enviale el link de Valentina. Ella recopila datos, da precios, explica instalacion y cuando el cliente este listo para pagar, lo devuelve a WhatsApp con todos los datos.</span>
   </div>
 </div>
 
@@ -444,17 +475,29 @@
 <div class="section">
   <h2><span class="section-number">10</span> Chatbot "Valentina"</h2>
 
-  <p>Nuestro asistente virtual de ventas atiende clientes automaticamente en:</p>
+  <p>Nuestro asistente virtual de ventas atiende clientes automaticamente 24/7 en:</p>
   <div class="screenshot">wondertv.live/chat</div>
 
   <div class="card success">
     <strong>Que hace Valentina:</strong>
     <ul style="margin: 8px 0 0 20px; font-size: 13px;">
-      <li>Responde preguntas sobre planes, precios, instalacion, metodos de pago y compatibilidad</li>
-      <li>Recopila datos del cliente (nombre, email, telefono, plan de interes)</li>
+      <li>Responde preguntas sobre planes, precios, instalacion, metodos de pago, canales y compatibilidad</li>
+      <li>Conoce los canales destacados por categoria (deportes, peliculas, noticias, infantiles, etc.)</li>
+      <li>Hace upsell inteligente: si eligen mensual, sugiere trimestral; si eligen trimestral, sugiere semestral</li>
+      <li>Compara precios con Netflix y cable para manejar objeciones</li>
+      <li>Recopila datos del cliente uno por uno (nombre, email, telefono, plan, usuario, clave)</li>
+      <li>Da soporte tecnico basico: reinicio, cache, reinstalacion, problemas de Downloader</li>
       <li>Cuando el cliente esta listo para comprar o ya pago, lo transfiere a WhatsApp con un boton verde</li>
-      <li>El mensaje de WhatsApp llega con todos los datos del cliente pre-escritos</li>
       <li>Todas las conversaciones quedan guardadas en "Conversaciones" del dashboard</li>
+    </ul>
+  </div>
+
+  <div class="card info">
+    <strong>🕐 Horario de atencion</strong>
+    <ul style="margin: 8px 0 0 20px; font-size: 13px;">
+      <li><strong>Valentina (chatbot):</strong> 24/7 — siempre disponible</li>
+      <li><strong>Operador (WhatsApp):</strong> 8:00 AM a 7:00 PM hora Venezuela</li>
+      <li>Valentina informa a los clientes sobre el horario cuando los transfiere fuera de hora</li>
     </ul>
   </div>
 
@@ -465,7 +508,25 @@
       <li>Revisa el mensaje pre-escrito: trae nombre, email, telefono, plan elegido y metodo de pago</li>
       <li>Solo necesitas verificar el comprobante de pago y activar/renovar en Flujo TV</li>
       <li>Si el cliente tiene dudas adicionales, Valentina ya le dio toda la informacion basica</li>
+      <li>Valentina intenta resolver problemas tecnicos antes de transferir (2-3 intentos)</li>
+      <li>Si un cliente tiene dispositivo incompatible (Roku, Apple TV), Valentina le ofrece alternativas (celular Android, Fire Stick)</li>
     </ul>
+  </div>
+
+  <h3>Respuestas rapidas recomendadas para WhatsApp</h3>
+  <div class="card">
+    <p style="font-size:13px;margin-bottom:10px">Configura estas respuestas rapidas en WhatsApp Business para agilizar la atencion:</p>
+    <table>
+      <tr><th>Atajo</th><th>Mensaje</th></tr>
+      <tr><td>/saludo</td><td>Hola! Soy del equipo Wonder TV. En que te puedo ayudar?</td></tr>
+      <tr><td>/precios</td><td>Mensual $7.65 | Trimestral $22.95 | Semestral $39.20 (7 meses) | Anual $69.60 (14 meses)</td></tr>
+      <tr><td>/pago</td><td>Zelle: pagos@wondertv.live (4Ward Studio LLC) | PayPal: wondertvpagos@gmail.com | Pago Movil: 0412-3947257 Banesco 0134</td></tr>
+      <tr><td>/confirmar</td><td>Perfecto! Enviame el comprobante de pago por aqui y te activo en minutos</td></tr>
+      <tr><td>/activado</td><td>Tu cuenta esta lista! Usuario: [usuario] Clave: [clave]. Descarga la app con Downloader codigo [codigo]</td></tr>
+      <tr><td>/valentina</td><td>Te comparto el link de nuestra asesora virtual: wondertv.live/chat</td></tr>
+      <tr><td>/renovar</td><td>Para renovar dime tu usuario IPTV y que plan quieres. Apenas pagues me envias el comprobante</td></tr>
+      <tr><td>/fuera</td><td>Gracias por escribir! Estamos fuera de horario. Te respondo a primera hora (8am-7pm)</td></tr>
+    </table>
   </div>
 </div>
 

@@ -11,7 +11,7 @@ App de control de creditos IPTV para el revendedor **Wonderclass** (Rafael Monti
 - **Tailwind CSS 4** + shadcn/ui
 - **Resend** (email campaigns)
 - **Anthropic SDK** (chatbot IA "Valentina" con Claude Haiku 4.5)
-- Deploy en **Vercel**
+- Deploy en **Vercel** — dominio: **wondertv.live**
 
 ## Flujo principal de negocio
 
@@ -31,7 +31,7 @@ El sync llama a la API de Flujo TV server-side con firma RSA+HMAC generada dinam
 
 - **Endpoint**: `POST /api/sync/flujo` (Server-Sent Events para progreso en tiempo real)
 - Descarga todas las paginas en paralelo (batches de 4)
-- Detecta diferencias en `flujo_credits`: si subio → crea venta pendiente automaticamente
+- Detecta diferencias en `flujo_credits`: si subio → crea venta pendiente automaticamente (tanto para clientes existentes con delta como para clientes nuevos con creditos > 0)
 - La firma (`x-sign`) se genera por request: UUID + RSA encrypt + HMAC-SHA256
 - Clave publica RSA hardcoded (extraida del bundle `umi.js` de Flujo TV)
 - Preserva phone/email editados manualmente (no sobreescribe con datos del remark)
@@ -49,10 +49,16 @@ Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 - **Soporte tecnico**: intenta resolver con troubleshooting (reinicio, cache, reinstalacion) antes de transferir. Pide usuario IPTV al inicio del soporte.
 - **Dispositivos incompatibles**: no deja morir la conversacion, ofrece alternativas (celular Android, Fire Stick ~$25-35)
 - **Canales**: tiene lista de canales destacados por categoria (deportes, peliculas, noticias, infantiles, musica, latinos, internacionales)
+- **Upsell**: sugiere el siguiente plan una vez sin presion (mensual→trimestral→semestral)
+- **Objeciones de precio**: compara con Netflix ($15/mes) y cable ($50-100/mes)
+- **Urgencia suave**: "precios con descuento disponibles ahora", sin escasez falsa
+- **Horario**: informa que soporte humano es de 8am-7pm Venezuela, fuera de horario sugiere dejar mensaje
+- **Verificacion de cuenta**: no puede consultar DB, guia al usuario a revisar en la app o transferir a WhatsApp
 - **Operador puede compartir link**: boton "Copiar link de Valentina" y "Enviar por WhatsApp" en /dashboard/conversations
 - **Captura de leads**: extrae email/telefono/nombre SOLO de mensajes del usuario (no del bot, para evitar capturar datos de la empresa como el numero de Pago Movil)
 - **Conversaciones guardadas**: cada chat se almacena en `chat_conversations` con datos del lead
 - **Codigo Downloader dinamico**: lee el codigo de `app_settings` en cada request. Configurable desde Settings por el operador cuando el proveedor lo cambie. Placeholder `{{DOWNLOADER_CODE}}` en el system prompt.
+- **Dashboard de conversaciones**: embudo de conversion (contacto%, transferencia%), alerta de leads calientes, botones para compartir link de Valentina
 
 ### Estrategia de precios (en el bot y plantillas de email)
 
@@ -75,7 +81,9 @@ Editor full-page (95vw) con:
 - Panel izquierdo: segmento, asunto, contenido (tabs Preview/HTML)
 - Panel derecho: destinatarios editables, agregar individual, pegado masivo
 - Segmento "Vacio" para campanas a listas externas sin destinatarios pre-cargados
+- Segmento "Leads del Chatbot" para prospectos que dejaron email en Valentina pero no son clientes aun (excluye automaticamente los que ya se convirtieron)
 - Templates con logo Wonder TV, boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
+- URLs de emails apuntan a wondertv.live (dominio real, no vercel.app)
 - Historial de campanas enviadas con contadores
 
 ## Estructura de paginas
@@ -88,7 +96,7 @@ Editor full-page (95vw) con:
 | `/dashboard/credits` | Pool de creditos comprados | Todos |
 | `/dashboard/credits/new` | Registrar compra al proveedor | Admin |
 | `/dashboard/campaigns` | Campanas de email (4 tipos + editor full-page) | Todos |
-| `/dashboard/conversations` | Historial de chats del bot con stats | Todos |
+| `/dashboard/conversations` | Historial de chats, embudo conversion, leads calientes, compartir link Valentina | Todos |
 | `/dashboard/expiring` | Clientes por vencer (activos + inactivos) | Todos |
 | `/dashboard/financials` | Reportes P&L, margenes, burn rate | Todos |
 | `/dashboard/sync` | Sync con Flujo TV (progreso SSE + historial + boton portal) | Admin |
