@@ -57,18 +57,65 @@ function generateXSign(path: string, method: string, body?: string): string {
   return `key=${key}&secret=${secret}&signature=${signature}`
 }
 
+function titleCase(s: string): string {
+  const particles = new Set(['de', 'del', 'la', 'el', 'las', 'los', 'y', 'e', 'da'])
+  return s.split(' ').map((w, i) => {
+    if (!w) return w
+    const lower = w.toLowerCase()
+    if (i > 0 && particles.has(lower)) return lower
+    return lower[0].toUpperCase() + lower.slice(1)
+  }).join(' ')
+}
+
+function cleanName(raw: string): string {
+  let n = raw
+  // Strip WhatsApp bold markers
+  n = n.replace(/\*/g, '')
+  // Remove emails
+  n = n.replace(/[\w.-]+@[\w.-]+\.\w+/gi, '')
+  // Remove email-like fragments without @ (e.g. "perezjuan8gmail com", "maverde27gmail")
+  n = n.replace(/\b\w+\d+\w*gmail\b\s*(com)?/gi, '')
+  n = n.replace(/\b\w+@\w+/gi, '')
+  // Remove all phone-like patterns
+  n = n.replace(/(?:\+?\d{1,3}[\s.-]?)?\(?\d{3,4}\)?[\s./,-]?\d{3,4}[\s./,-]?\d{3,4}/g, '')
+  n = n.replace(/\b\d{4}[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b/g, '')
+  n = n.replace(/\b\d{10,13}\b/g, '')
+  // Remove form labels and everything after colon
+  n = n.replace(/\b(telf|telef|tel[ée]fono|correo(\s*electr[oó]nico)?|c\.?\s*i\.?|cedula|clave|usuario|contrase[nñ]a|password|monto|tipo\s*de\s*plan|plan|nombre|apellido|nombres|apellidos)\s*:?\s*\S*/gi, '')
+  // Remove price patterns
+  n = n.replace(/\$\s*\d+[.,]?\d*/g, '')
+  n = n.replace(/\b\d+[.,]?\d*\s*\$/g, '')
+  n = n.replace(/\b\d+[.,]?\d*\s*(usd|bs|bss)\b/gi, '')
+  // Remove plan/time info
+  n = n.replace(/\b\d+\s*(mes|meses|año|años|a[ñn]o)\b/gi, '')
+  n = n.replace(/\b(mensual|trimestral|semestral|anual|mes|meses|credito|creditos|renovaci[oó]n|renovaci[oó]nes)\b/gi, '')
+  // Remove relationship phrases (amigo/prima/esposa de X...)
+  n = n.replace(/\b(amigo|amiga|prima|primo|hermano|hermana|esposa|esposo|hijo|hija|novia|novio|cu[ñn]ado|cu[ñn]ada|suegr[oa]s?|mam[aá]|pap[aá]|jefe|vecino|vecina|revendedor)\s+(de\s+)?[\wáéíóúñ]+.*$/gi, '')
+  // Remove trailing filler
+  n = n.replace(/\b(usa|ve|es|cl|ca|ae|otro|otra|cuenta|segunda|alterna|nueva|personal|detalla|coworking|fire\s*stick)\b\s*$/gi, '')
+  // Remove "Para su afiliación..." type form intros
+  n = n.replace(/^para\s+su\s+afiliaci[oó]n.*?(nombres?\s*:?\s*)/gi, '')
+  // Remove trailing "com" (leftover from email fragments)
+  n = n.replace(/\bcom\s*$/gi, '')
+  // Remove trailing "tel" / "tlf" / "cel" leftovers
+  n = n.replace(/\b(tel|tlf|cel|telf|telef|correo)\s*$/gi, '')
+  // Clean separators
+  n = n.replace(/[,.\-/|:;()]+/g, ' ').replace(/\s+/g, ' ').trim()
+  // Remove trailing single char fragments
+  n = n.replace(/\s+\S{1}$/g, '').trim()
+  // Title case (handles accents properly)
+  n = titleCase(n)
+  return n
+}
+
 function parseRemark(remark: string): { name: string; phone: string | null; email: string | null } {
   if (!remark) return { name: 'Sin nombre', phone: null, email: null }
   const emailMatch = remark.match(/[\w.-]+@[\w.-]+\.\w+/i)
   const email = emailMatch ? emailMatch[0].replace(/([a-z])([A-Z])/g, '$1.$2').toLowerCase() : null
   const phoneMatch = remark.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/g)
   const phone = phoneMatch ? phoneMatch[0] : null
-  let name = remark
-  if (email) name = name.replace(emailMatch![0], '')
-  if (phone) name = name.replace(phone, '')
-  name = name.replace(/[,.\-/|]+/g, ' ').replace(/\s+/g, ' ').trim()
-  name = name.replace(/\b(usa|ve|es|cl|ca|ae|otro|otra|cuenta|amigo|amiga|de|prima|primo)\b\s*$/gi, '').trim()
-  if (!name) name = remark.substring(0, 50)
+  const name = cleanName(remark)
+  if (!name) return { name: remark.substring(0, 50), phone, email }
   return { name, phone, email }
 }
 
