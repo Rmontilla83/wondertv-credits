@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog'
 import { formatDateTime } from '@/lib/utils'
-import { MessageCircle, User, Mail, Phone, ShoppingCart, ArrowRight, ExternalLink } from 'lucide-react'
+import { MessageCircle, User, Mail, Phone, ShoppingCart, ArrowRight, ExternalLink, Copy, Share2, Check } from 'lucide-react'
 
 interface Conversation {
   id: string
@@ -29,7 +29,24 @@ export default function ConversationsPage() {
   const [loading, setLoading] = useState(true)
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [selected, setSelected] = useState<Conversation | null>(null)
+  const [copied, setCopied] = useState<string | null>(null)
   const supabase = useMemo(() => createClient(), [])
+
+  const chatUrl = typeof window !== 'undefined' ? `${window.location.origin}/chat` : '/chat'
+
+  const copyLink = (type: 'link' | 'whatsapp', phone?: string) => {
+    let text: string
+    if (type === 'whatsapp' && phone) {
+      const digits = phone.replace(/\D/g, '')
+      text = `https://wa.me/${digits}?text=${encodeURIComponent(`Hola! Te comparto el link de nuestra asesora virtual Valentina para que te atienda al instante 👇\n${chatUrl}`)}`
+      window.open(text, '_blank')
+      return
+    }
+    text = chatUrl
+    navigator.clipboard.writeText(text)
+    setCopied(type)
+    setTimeout(() => setCopied(null), 2000)
+  }
 
   useEffect(() => {
     supabase
@@ -64,9 +81,33 @@ export default function ConversationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Conversaciones del Bot</h1>
-        <p className="text-sm text-muted-foreground">Historial de chats con Valentina</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Conversaciones del Bot</h1>
+          <p className="text-sm text-muted-foreground">Historial de chats con Valentina</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs gap-1.5"
+            onClick={() => copyLink('link')}
+          >
+            {copied === 'link' ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied === 'link' ? 'Copiado!' : 'Copiar link de Valentina'}
+          </Button>
+          <Button
+            size="sm"
+            className="text-xs gap-1.5 bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => {
+              const phone = prompt('Numero de WhatsApp del cliente (ej: 584141234567):')
+              if (phone) copyLink('whatsapp', phone)
+            }}
+          >
+            <Share2 className="h-3.5 w-3.5" />
+            Enviar por WhatsApp
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -215,17 +256,32 @@ export default function ConversationsPage() {
           {/* Footer */}
           <div className="px-5 py-3 border-t shrink-0 flex items-center justify-between text-xs text-muted-foreground">
             <span>{selected?.message_count} mensajes — {selected && formatDateTime(selected.created_at)}</span>
-            {(selected?.lead_phone || selected?.lead_email) && (
-              <a
-                href={`https://wa.me/${selected?.lead_phone?.replace(/\D/g, '') || ''}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button size="sm" variant="outline" className="text-xs gap-1">
-                  <ExternalLink className="h-3 w-3" />Contactar
+            <div className="flex items-center gap-2">
+              {selected?.lead_phone && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs gap-1"
+                  onClick={() => {
+                    const digits = selected.lead_phone!.replace(/\D/g, '')
+                    window.open(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola! Te comparto el link de nuestra asesora virtual Valentina para que te atienda al instante 👇\n${chatUrl}`)}`, '_blank')
+                  }}
+                >
+                  <Share2 className="h-3 w-3" />Enviar Valentina
                 </Button>
-              </a>
-            )}
+              )}
+              {(selected?.lead_phone || selected?.lead_email) && (
+                <a
+                  href={`https://wa.me/${selected?.lead_phone?.replace(/\D/g, '') || ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button size="sm" variant="outline" className="text-xs gap-1">
+                    <ExternalLink className="h-3 w-3" />Contactar
+                  </Button>
+                </a>
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

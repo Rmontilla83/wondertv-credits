@@ -42,10 +42,14 @@ El sync llama a la API de Flujo TV server-side con firma RSA+HMAC generada dinam
 Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 
 - **Personalidad**: asesora de ventas, amable, persuasiva, NUNCA revela que es IA
-- **Conocimiento**: planes/precios, instalacion por dispositivo, metodos de pago, compatibilidad
-- **Formato**: texto plano (NO usa markdown **bold**), MAYUSCULAS para enfasis
+- **Conocimiento**: planes/precios, instalacion por dispositivo, metodos de pago, compatibilidad, canales destacados por categoria, troubleshooting tecnico
+- **Formato**: texto plano (NO usa markdown **bold**), MAYUSCULAS para enfasis. Backend post-procesa para eliminar `**` que el modelo pueda agregar
 - **Flujo de venta**: recopila datos → da info de pago → "avisame cuando pagues" → cliente confirma pago → transfiere a WhatsApp con boton + datos pre-escritos
-- **Transferencia a WhatsApp**: solo cuando el cliente ya pago, tiene problema tecnico, o pide humano. Usa marcador `[WHATSAPP:mensaje]` que el frontend convierte en boton verde. NUNCA transfiere antes de que el cliente confirme pago.
+- **Transferencia a WhatsApp**: solo cuando el cliente ya pago, tiene problema tecnico irresuelto tras 2-3 intentos, o pide humano. Usa marcador `[WHATSAPP:mensaje]` que el frontend convierte en boton verde. NUNCA transfiere antes de que el cliente confirme pago. NUNCA da el numero de WhatsApp como texto plano, SIEMPRE usa el marcador.
+- **Soporte tecnico**: intenta resolver con troubleshooting (reinicio, cache, reinstalacion) antes de transferir. Pide usuario IPTV al inicio del soporte.
+- **Dispositivos incompatibles**: no deja morir la conversacion, ofrece alternativas (celular Android, Fire Stick ~$25-35)
+- **Canales**: tiene lista de canales destacados por categoria (deportes, peliculas, noticias, infantiles, musica, latinos, internacionales)
+- **Operador puede compartir link**: boton "Copiar link de Valentina" y "Enviar por WhatsApp" en /dashboard/conversations
 - **Captura de leads**: extrae email/telefono/nombre SOLO de mensajes del usuario (no del bot, para evitar capturar datos de la empresa como el numero de Pago Movil)
 - **Conversaciones guardadas**: cada chat se almacena en `chat_conversations` con datos del lead
 - **Codigo Downloader dinamico**: lee el codigo de `app_settings` en cada request. Configurable desde Settings por el operador cuando el proveedor lo cambie. Placeholder `{{DOWNLOADER_CODE}}` en el system prompt.
