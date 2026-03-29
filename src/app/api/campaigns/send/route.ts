@@ -9,7 +9,7 @@ function getResend() {
   if (!key) throw new Error('RESEND_API_KEY no configurado')
   return new Resend(key)
 }
-const FROM_EMAIL = process.env.FROM_EMAIL || 'Wonder TV <flujo@wondertv.live>'
+const FROM_EMAIL = process.env.FROM_EMAIL || 'WonderTV (FLUJO) <noreply@wondertv.live>'
 
 function getSegmentQuery(segment: string) {
   const now = new Date()
