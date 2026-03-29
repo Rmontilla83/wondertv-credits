@@ -74,8 +74,11 @@ function cleanName(raw: string): string {
   // Remove emails
   n = n.replace(/[\w.-]+@[\w.-]+\.\w+/gi, '')
   // Remove email-like fragments without @ (e.g. "perezjuan8gmail com", "maverde27gmail")
-  n = n.replace(/\b\w+\d+\w*gmail\b\s*(com)?/gi, '')
+  n = n.replace(/\b\w+\d+\w*gmail\w*\b\s*(com)?/gi, '')
   n = n.replace(/\b\w+@\w+/gi, '')
+  // Remove login/password that leaked into name (alphanumeric strings with digits)
+  n = n.replace(/\b[a-zA-Z]+\d{2,}\w*\b/g, '')
+  n = n.replace(/\b\d+[a-zA-Z]+\d+\w*\b/g, '')
   // Remove all phone-like patterns
   n = n.replace(/(?:\+?\d{1,3}[\s.-]?)?\(?\d{3,4}\)?[\s./,-]?\d{3,4}[\s./,-]?\d{3,4}/g, '')
   n = n.replace(/\b\d{4}[\s.-]?\d{3,4}[\s.-]?\d{3,4}\b/g, '')
@@ -91,8 +94,8 @@ function cleanName(raw: string): string {
   n = n.replace(/\b(mensual|trimestral|semestral|anual|mes|meses|credito|creditos|renovaci[oó]n|renovaci[oó]nes)\b/gi, '')
   // Remove relationship phrases (amigo/prima/esposa de X...)
   n = n.replace(/\b(amigo|amiga|prima|primo|hermano|hermana|esposa|esposo|hijo|hija|novia|novio|cu[ñn]ado|cu[ñn]ada|suegr[oa]s?|mam[aá]|pap[aá]|jefe|vecino|vecina|revendedor)\s+(de\s+)?[\wáéíóúñ]+.*$/gi, '')
-  // Remove trailing filler
-  n = n.replace(/\b(usa|ve|es|cl|ca|ae|otro|otra|cuenta|segunda|alterna|nueva|personal|detalla|coworking|fire\s*stick)\b\s*$/gi, '')
+  // Remove trailing/inline filler words
+  n = n.replace(/\b(usa|ve|es|cl|ca|ae|otro|otra|cuenta|segunda|alterna|nueva|personal|detalla|coworking|fire\s*stick|pago\s*(en\s*)?(efectivo|movil)?|res\s+\w+|casas\s+botes\s*\w*|siete\s*mares|cerromar|tsj|wuitrade|hopenet\d*|2da(\s+cuenta)?|matraca)\b/gi, '')
   // Remove "Para su afiliación..." type form intros
   n = n.replace(/^para\s+su\s+afiliaci[oó]n.*?(nombres?\s*:?\s*)/gi, '')
   // Remove trailing "com" (leftover from email fragments)
