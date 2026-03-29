@@ -60,11 +60,24 @@ export default function ConversationsPage() {
       })
   }, [supabase])
 
+  const withContact = conversations.filter(c => c.lead_email || c.lead_phone)
+  const transferred = conversations.filter(c => c.transferred_to_whatsapp)
+  const withPlan = conversations.filter(c => c.plan_interest)
+  // Hot leads: have plan interest + contact data but NOT transferred to WhatsApp yet
+  const hotLeads = conversations.filter(c => c.plan_interest && (c.lead_email || c.lead_phone) && !c.transferred_to_whatsapp)
+
   const stats = {
     total: conversations.length,
-    withContact: conversations.filter(c => c.lead_email || c.lead_phone).length,
-    transferred: conversations.filter(c => c.transferred_to_whatsapp).length,
-    withPlan: conversations.filter(c => c.plan_interest).length,
+    withContact: withContact.length,
+    transferred: transferred.length,
+    withPlan: withPlan.length,
+    hotLeads: hotLeads.length,
+    conversionRate: conversations.length > 0
+      ? Math.round((transferred.length / conversations.length) * 100)
+      : 0,
+    contactRate: conversations.length > 0
+      ? Math.round((withContact.length / conversations.length) * 100)
+      : 0,
   }
 
   if (loading) {
@@ -111,7 +124,7 @@ export default function ConversationsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold">{stats.total}</p>
@@ -121,13 +134,13 @@ export default function ConversationsPage() {
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{stats.withContact}</p>
-            <p className="text-xs text-muted-foreground">Con datos de contacto</p>
+            <p className="text-xs text-muted-foreground">Con contacto ({stats.contactRate}%)</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <p className="text-2xl font-bold text-green-600">{stats.transferred}</p>
-            <p className="text-xs text-muted-foreground">Transferidas a WhatsApp</p>
+            <p className="text-xs text-muted-foreground">A WhatsApp ({stats.conversionRate}%)</p>
           </CardContent>
         </Card>
         <Card>
@@ -136,7 +149,60 @@ export default function ConversationsPage() {
             <p className="text-xs text-muted-foreground">Interesados en plan</p>
           </CardContent>
         </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-orange-600">{stats.hotLeads}</p>
+            <p className="text-xs text-muted-foreground">Leads calientes</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-2xl font-bold text-emerald-600">{stats.conversionRate}%</p>
+            <p className="text-xs text-muted-foreground">Tasa de conversion</p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Hot leads alert */}
+      {hotLeads.length > 0 && (
+        <Card className="border-orange-200 bg-orange-50/50">
+          <CardContent className="p-4">
+            <p className="text-sm font-semibold text-orange-800 mb-2">
+              {hotLeads.length} lead{hotLeads.length > 1 ? 's' : ''} caliente{hotLeads.length > 1 ? 's' : ''} — interesados en plan pero no transfirieron a WhatsApp
+            </p>
+            <div className="space-y-2">
+              {hotLeads.slice(0, 5).map((conv) => (
+                <div key={conv.id} className="flex items-center justify-between p-2 rounded bg-white border border-orange-200">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium truncate">{conv.lead_name || 'Visitante'}</span>
+                    {conv.plan_interest && <Badge className="bg-purple-100 text-purple-700 text-[10px]">{conv.plan_interest}</Badge>}
+                    {conv.lead_phone && <span className="text-[10px] text-green-600">{conv.lead_phone}</span>}
+                    {conv.lead_email && <span className="text-[10px] text-blue-600">{conv.lead_email}</span>}
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {conv.lead_phone && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-[10px] h-7 gap-1"
+                        onClick={() => {
+                          const digits = conv.lead_phone!.replace(/\D/g, '')
+                          window.open(`https://wa.me/${digits}?text=${encodeURIComponent(`Hola! Te comparto el link de nuestra asesora virtual Valentina para que te atienda al instante 👇\n${chatUrl}`)}`, '_blank')
+                        }}
+                      >
+                        <Share2 className="h-3 w-3" />Enviar Valentina
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" className="text-[10px] h-7" onClick={() => setSelected(conv)}>
+                      Ver chat
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Conversations list */}
       <Card>

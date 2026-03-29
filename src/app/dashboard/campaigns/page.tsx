@@ -249,6 +249,17 @@ export default function CampaignsPage() {
           counts.active = active.length
           counts.all = clientsRes.data.length
 
+          // Count chatbot leads with email that are NOT existing clients
+          const clientEmails = new Set(clientsRes.data.map(c => c.email?.toLowerCase()))
+          const { data: leadsData } = await supabase
+            .from('leads')
+            .select('email')
+            .eq('source', 'chatbot-ai')
+            .not('email', 'is', null)
+          counts.chatbot_leads = leadsData
+            ? leadsData.filter(l => l.email && !clientEmails.has(l.email.toLowerCase())).length
+            : 0
+
           setRecipientCounts(counts)
         }
       } catch (e) {
@@ -283,6 +294,19 @@ export default function CampaignsPage() {
 
     if (seg === 'empty') {
       setRecipients([])
+      setLoadingPreview(false)
+      return
+    }
+
+    if (seg === 'chatbot_leads') {
+      // Fetch leads from chatbot that are NOT existing clients
+      const [leadsRes, clientsRes] = await Promise.all([
+        supabase.from('leads').select('name, email, phone').eq('source', 'chatbot-ai').not('email', 'is', null),
+        supabase.from('clients').select('email').not('email', 'is', null),
+      ])
+      const clientEmails = new Set((clientsRes.data || []).map(c => c.email?.toLowerCase()))
+      const leads = (leadsRes.data || []).filter(l => l.email && !clientEmails.has(l.email.toLowerCase()))
+      setRecipients(leads.map(l => ({ name: l.name || 'Prospecto', email: l.email! })))
       setLoadingPreview(false)
       return
     }

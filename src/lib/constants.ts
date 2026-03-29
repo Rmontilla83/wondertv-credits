@@ -52,4 +52,5 @@ export const CAMPAIGN_SEGMENTS: { value: CampaignSegment; label: string; descrip
   { value: 'inactive', label: 'Inactivos', description: 'Clientes con servicio expirado' },
   { value: 'active', label: 'Todos los activos', description: 'Clientes con servicio vigente' },
   { value: 'all', label: 'Todos', description: 'Todos los clientes con email' },
+  { value: 'chatbot_leads', label: 'Leads del Chatbot', description: 'Prospectos que dejaron email en el chat pero no compraron' },
 ]
