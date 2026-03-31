@@ -18,20 +18,24 @@ App de control de creditos IPTV para el revendedor **Wonderclass** (Rafael Monti
 ```
 1. Admin compra creditos al proveedor → credit_purchases
 2. Operador recarga clientes en el portal Flujo TV
-3. Sync automatico detecta Δ creditos → crea credit_assignment (pending)
+3. Sync detecta ventas desde el transaction log de Flujo TV → crea credit_assignment (pending)
 4. Operador completa el pago (metodo, monto, referencia) → payment_status = completed
-5. Dashboard muestra finanzas en tiempo real
+5. Dashboard muestra finanzas en tiempo real (auto-refresh al completar pago)
 6. Chatbot "Valentina" atiende prospectos 24/7 → captura leads → transfiere a WhatsApp
 7. Campanas de email para vencimientos, reactivacion, promociones y bienvenida
+8. Cron diario (6am VET) auto-login Flujo TV + sync + deteccion de ventas
 ```
 
 ## Sync con Flujo TV
 
 El sync llama a la API de Flujo TV server-side con firma RSA+HMAC generada dinamicamente (reverse-engineered del frontend). Solo necesita el token de sesion (`FLUJO_TOKEN` en `.env.local`).
 
-- **Endpoint**: `POST /api/sync/flujo` (Server-Sent Events para progreso en tiempo real)
+- **Endpoint manual**: `POST /api/sync/flujo` (Server-Sent Events para progreso en tiempo real)
+- **Endpoint cron**: `GET /api/cron/sync` (login automatico con `FLUJO_USERNAME`/`FLUJO_PASSWORD`, ejecutado diario a las 6am VET via Vercel Cron)
+- **Login Flujo TV**: `POST /api/v1/magis/signin` con `{username, password}` → retorna token
 - Descarga todas las paginas en paralelo (batches de 4)
-- Detecta diferencias en `flujo_credits`: si subio → crea venta pendiente automaticamente (tanto para clientes existentes con delta como para clientes nuevos con creditos > 0)
+- **Deteccion de ventas**: compara `flujo_end_date` antes y despues del sync. Si la fecha de expiracion avanzo, es una venta. Cantidad = diferencia en meses
+- **Deduplicacion**: por campo `notes` con formato `Venta auto: {login} {old_end_date} → {new_end_date}`, busca por match exacto para evitar duplicados
 - La firma (`x-sign`) se genera por request: UUID + RSA encrypt + HMAC-SHA256
 - Clave publica RSA hardcoded (extraida del bundle `umi.js` de Flujo TV)
 - Preserva phone/email editados manualmente (no sobreescribe con datos del remark)
@@ -46,8 +50,11 @@ Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 - **Formato**: texto plano (NO usa markdown **bold**), MAYUSCULAS para enfasis. Backend post-procesa para eliminar `**` que el modelo pueda agregar
 - **Flujo de venta**: recopila datos → da info de pago → "avisame cuando pagues" → cliente confirma pago → transfiere a WhatsApp con boton + datos pre-escritos
 - **Transferencia a WhatsApp**: solo cuando el cliente ya pago, tiene problema tecnico irresuelto tras 2-3 intentos, o pide humano. Usa marcador `[WHATSAPP:mensaje]` que el frontend convierte en boton verde. NUNCA transfiere antes de que el cliente confirme pago. NUNCA da el numero de WhatsApp como texto plano, SIEMPRE usa el marcador.
-- **Soporte tecnico**: intenta resolver con troubleshooting (reinicio, cache, reinstalacion) antes de transferir. Pide usuario IPTV al inicio del soporte.
-- **Dispositivos incompatibles**: no deja morir la conversacion, ofrece alternativas (celular Android, Fire Stick ~$25-35)
+- **Soporte tecnico**: intenta resolver con troubleshooting (reinicio, cache, reinstalacion) antes de transferir. Pide usuario IPTV al inicio del soporte
+- **App desactivada Fire TV**: guia completa paso a paso (desinstalar, desactivar updates automaticos, ajustar privacidad, limpiar APKs en Downloader FILES, reinstalar con codigo de Downloader, activar permisos desarrollador)
+- **Competencia**: conoce Magis TV y Xuper TV (apps gratuitas similares). No habla mal de ellas pero destaca que Wonder TV es premium: calidad HD estable, soporte directo, sin publicidad, 3 pantallas. Argumento: "lo gratis sale caro"
+- **Fire TV Stick 4K Select (2025)**: NO compatible (usa Vega OS/Linux). Recomienda Fire TV Stick 4K o 4K Max en su lugar
+- **Dispositivos incompatibles**: no deja morir la conversacion, ofrece alternativas (celular Android, Fire Stick 4K/4K Max ~$25-35)
 - **Canales**: tiene lista de canales destacados por categoria (deportes, peliculas, noticias, infantiles, musica, latinos, internacionales)
 - **Upsell**: sugiere el siguiente plan una vez sin presion (mensual→trimestral→semestral)
 - **Objeciones de precio**: compara con Netflix ($15/mes) y cable ($50-100/mes)
@@ -72,19 +79,23 @@ Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 ## Campanas de email (/dashboard/campaigns)
 
 Envio de emails via Resend con 4 tipos predefinidos:
-- **Recordatorio de vencimiento**: clientes por vencer en 7/14/30 dias
-- **Reactivacion**: clientes inactivos/expirados (solo los que tienen email ~126 de 217)
+- **Recordatorio de vencimiento**: clientes por vencer (plantilla persuasiva con tabla de precios, sin mencionar dias especificos)
+- **Reactivacion**: clientes inactivos/expirados
 - **Promocion/Ventas**: tabla de precios visual con los 4 planes IPTV (FLUJO)
 - **Bienvenida**: nuevos clientes
 
 Editor full-page (95vw) con:
 - Panel izquierdo: segmento, asunto, contenido (tabs Preview/HTML)
-- Panel derecho: destinatarios editables, agregar individual, pegado masivo
+- Panel derecho: destinatarios editables, agregar individual, pegado masivo (soporta nombre,email / email,nombre / Nombre \<email\>), carga de archivo CSV/TXT
 - Segmento "Vacio" para campanas a listas externas sin destinatarios pre-cargados
 - Segmento "Leads del Chatbot" para prospectos que dejaron email en Valentina pero no son clientes aun (excluye automaticamente los que ya se convirtieron)
 - Templates con logo Wonder TV, boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
 - URLs de emails apuntan a wondertv.live (dominio real, no vercel.app)
+- **Envio por lotes**: el API envia en lotes de ~50s para respetar el timeout de Vercel (60s). El frontend llama automaticamente al siguiente lote. Rate limit de 150ms entre emails
+- **Barra de progreso**: muestra emails enviados/fallidos/total en tiempo real durante el envio
+- **Log de errores**: click en el numero de fallidos en el historial para ver email + error especifico de cada uno
 - Historial de campanas enviadas con contadores
+- **Anti-spam**: remitente `hola@wondertv.live`, header List-Unsubscribe, link de desuscripcion en footer, subjects sin emojis excesivos. DNS configurado: SPF, DKIM, DMARC (p=none)
 
 ## Estructura de paginas
 
@@ -159,9 +170,10 @@ Configuraciones globales (key-value): `downloader_code` (codigo para Downloader,
 
 | Archivo | Funcion |
 |---------|---------|
-| `src/app/api/sync/flujo/route.ts` | Sync SSE con firma RSA dinamica + deteccion Δ creditos |
+| `src/app/api/sync/flujo/route.ts` | Sync SSE con firma RSA dinamica + deteccion ventas via account log |
+| `src/app/api/cron/sync/route.ts` | Cron sync: auto-login Flujo TV + sync + ventas (diario 6am VET) |
 | `src/app/api/chat/route.ts` | API del chatbot (Claude Haiku + system prompt + downloader dinamico) |
-| `src/app/api/campaigns/send/route.ts` | Envio de emails via Resend (soporta customRecipients) |
+| `src/app/api/campaigns/send/route.ts` | Envio de emails via Resend (lotes, rate limit, progreso en DB) |
 | `src/app/chat/page.tsx` | UI del chatbot publico "Valentina" (dark premium, glassmorphism) |
 | `src/app/dashboard/campaigns/page.tsx` | Editor de campanas + templates de email con precios |
 | `src/app/dashboard/conversations/page.tsx` | Historial de conversaciones del bot con stats |
@@ -176,10 +188,12 @@ Configuraciones globales (key-value): `downloader_code` (codigo para Downloader,
 ## Variables de entorno (.env.local + Vercel)
 - `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `FLUJO_TOKEN` - Token de sesion de Flujo TV (actualizar cuando expire)
+- `FLUJO_TOKEN` - Token de sesion de Flujo TV (ya no necesario para cron, se usa auto-login)
+- `FLUJO_USERNAME` / `FLUJO_PASSWORD` - Credenciales de Flujo TV para auto-login del cron
+- `CRON_SECRET` - Secret para proteger el endpoint cron de Vercel
 - `ANTHROPIC_API_KEY` - Claude API para chatbot Valentina
 - `RESEND_API_KEY` - Resend para campanas de email
-- `FROM_EMAIL` - Remitente de emails (Wonder TV <flujo@wondertv.live>)
+- `FROM_EMAIL` - Remitente de emails (Wonder TV <hola@wondertv.live>)
 
 ## Filtros de clientes
 La tabla de clientes tiene 5 filtros: Todos (azul), Activos (verde), Inactivos (gris), Por vencer (naranja), Expirados (rojo).
@@ -203,3 +217,9 @@ La tabla de clientes tiene 5 filtros: Todos (azul), Activos (verde), Inactivos (
 - WhatsApp del operador: +58 424-8488722 (solo se revela via el chatbot tras recopilar datos)
 - Logos: usar width/height reales de la imagen fuente (640x640 para logo.png, 180x180 para logo-small.png), controlar tamaño visual con CSS classes (w-36, w-32, etc). No inventar dimensiones o se pixela.
 - Settings: solo gestion de usuarios + codigo Downloader (tasa de cambio eliminada, se ingresa directo en formulario de venta)
+- Dashboard: auto-refresh de KPIs, ingresos y graficas al completar un pago (no requiere recargar pagina)
+- Sync: deteccion de ventas via delta de `flujo_end_date` (si la fecha de expiracion avanzo = venta). Deduplicacion por notes con formato `{login} {old_end} → {new_end}`
+- Cron: `vercel.json` con cron `0 10 * * *` (6am VET). Endpoint `/api/cron/sync` protegido con `CRON_SECRET`
+- Campanas: envio por lotes con rate limit 150ms. Progress guardado en DB cada 10 emails. Frontend hace polling/calls sucesivos
+- Emails: `campaign_emails.client_id` es nullable (soporta destinatarios manuales sin client_id)
+- Anti-spam: SPF + DKIM + DMARC configurados en DNS (GoDaddy). FROM_EMAIL = hola@wondertv.live. List-Unsubscribe header + link desuscripcion en footer

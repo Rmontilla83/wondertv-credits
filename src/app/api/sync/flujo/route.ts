@@ -42,6 +42,7 @@ interface FlujoPageResponse {
   msg: string
 }
 
+
 function generateXSign(path: string, method: string, body?: string): string {
   const key = crypto.randomUUID()
   const time = Math.floor(Date.now() / 1000)
@@ -243,28 +244,38 @@ export async function POST(request: NextRequest) {
 
           const { data: existing } = await adminClient
             .from('clients')
-            .select('id, flujo_credits, phone, email')
+            .select('id, flujo_credits, phone, email, flujo_end_date, flujo_login')
             .eq('flujo_cust_id', account.cust_id)
             .maybeSingle()
 
           if (existing) {
-            const oldCredits = existing.flujo_credits ?? 0
-            const delta = account.credit - oldCredits
+            // Detect sale: end_date extended = client was recharged
+            if (existing.flujo_end_date && account.end_date && account.end_date > existing.flujo_end_date) {
+              const oldEnd = new Date(existing.flujo_end_date)
+              const newEnd = new Date(account.end_date)
+              const diffMonths = Math.max(1, Math.round((newEnd.getTime() - oldEnd.getTime()) / (30.44 * 24 * 60 * 60 * 1000)))
+              const dedupKey = `Venta auto: ${account.login_name} ${existing.flujo_end_date} → ${account.end_date}`
 
-            if (delta > 0) {
-              const { error: saleError } = await adminClient
+              const { data: existingSale } = await adminClient
                 .from('credit_assignments')
-                .insert({
-                  client_id: existing.id,
-                  assigned_by: assignedBy,
-                  quantity: delta,
-                  period_start: account.start_date ? new Date(account.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                  period_end: account.end_date ? new Date(account.end_date).toISOString().split('T')[0] : null,
-                  is_courtesy: false,
-                  payment_status: 'pending',
-                  notes: `Auto-detectado: +${delta} créditos en sync`,
-                })
-              if (!saleError) pendingSales++
+                .select('id')
+                .eq('notes', dedupKey)
+                .maybeSingle()
+
+              if (!existingSale) {
+                const { error: saleError } = await adminClient
+                  .from('credit_assignments')
+                  .insert({
+                    client_id: existing.id,
+                    assigned_by: assignedBy,
+                    quantity: diffMonths,
+                    period_start: new Date().toISOString().split('T')[0],
+                    is_courtesy: false,
+                    payment_status: 'pending',
+                    notes: dedupKey,
+                  })
+                if (!saleError) pendingSales++
+              }
             }
 
             const { error } = await adminClient
@@ -303,25 +314,7 @@ export async function POST(request: NextRequest) {
               .select('id')
               .single()
             if (error) { errors++; console.error('Insert error:', error.message) }
-            else {
-              created++
-              // New client with credits = sale to register
-              if (account.credit > 0 && newClient) {
-                const { error: saleError } = await adminClient
-                  .from('credit_assignments')
-                  .insert({
-                    client_id: newClient.id,
-                    assigned_by: assignedBy,
-                    quantity: account.credit,
-                    period_start: account.start_date ? new Date(account.start_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                    period_end: account.end_date ? new Date(account.end_date).toISOString().split('T')[0] : null,
-                    is_courtesy: false,
-                    payment_status: 'pending',
-                    notes: `Auto-detectado: cliente nuevo con ${account.credit} créditos`,
-                  })
-                if (!saleError) pendingSales++
-              }
-            }
+            else created++
           }
 
           // Send progress every 20 clients
@@ -329,11 +322,18 @@ export async function POST(request: NextRequest) {
             send('progress', {
               phase: 'syncing',
               message: `Procesando ${idx + 1}/${allAccounts.length} clientes...`,
-              percent: 50 + Math.round(((idx + 1) / allAccounts.length) * 50),
+              percent: 50 + Math.round(((idx + 1) / allAccounts.length) * 40),
               created, updated, errors, pendingSales,
             })
           }
         }
+
+        send('progress', {
+          phase: 'sales',
+          message: `${pendingSales} ventas detectadas por cambio de fecha de expiración`,
+          percent: 98,
+          pendingSales,
+        })
 
       } catch (e) {
         errorMessage = String(e)
