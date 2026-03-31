@@ -250,11 +250,13 @@ export async function POST(request: NextRequest) {
 
           if (existing) {
             // Detect sale: end_date extended = client was recharged
-            if (existing.flujo_end_date && account.end_date && account.end_date > existing.flujo_end_date) {
-              const oldEnd = new Date(existing.flujo_end_date)
-              const newEnd = new Date(account.end_date)
+            const oldEnd = existing.flujo_end_date ? new Date(existing.flujo_end_date) : null
+            const newEnd = account.end_date ? new Date(account.end_date) : null
+            if (oldEnd && newEnd && newEnd.getTime() > oldEnd.getTime()) {
               const diffMonths = Math.max(1, Math.round((newEnd.getTime() - oldEnd.getTime()) / (30.44 * 24 * 60 * 60 * 1000)))
-              const dedupKey = `Venta auto: ${account.login_name} ${existing.flujo_end_date} → ${account.end_date}`
+              const oldDateStr = oldEnd.toISOString().split('T')[0]
+              const newDateStr = newEnd.toISOString().split('T')[0]
+              const dedupKey = `Venta auto: ${account.login_name} ${oldDateStr} → ${newDateStr}`
 
               const { data: existingSale } = await adminClient
                 .from('credit_assignments')
