@@ -42,14 +42,19 @@ export async function GET() {
     .delete()
     .gte('created_at', '1970-01-01')
 
-  await adminClient
+  const { error: purchaseError } = await adminClient
     .from('credit_purchases')
     .insert({
+      purchased_by: assignedBy,
       quantity: 311,
-      total_cost_usd: 0,
-      payment_method: 'transfer',
-      payment_reference: 'Balance inicial',
+      total_cost_usd: 311.00,
+      payment_method: 'zelle',
+      payment_reference: 'Balance inicial - migración',
     })
+
+  if (purchaseError) {
+    return NextResponse.json({ error: `Error creando compra: ${purchaseError.message}` }, { status: 500 })
+  }
 
   // 3. Mapear login → client_id
   const { data: clients } = await adminClient
