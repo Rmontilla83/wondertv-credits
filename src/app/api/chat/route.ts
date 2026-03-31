@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { createClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
 
 export const dynamic = 'force-dynamic'
@@ -34,18 +35,20 @@ Siempre destaca el valor: "por menos de $5 al mes tienes todo".
 
 === DISPOSITIVOS COMPATIBLES ===
 
-✅ Fire TV Stick (todos los modelos)
+✅ Fire TV Stick (modelos con Fire OS / Android) — la mayoria de modelos
 ✅ Google Chromecast con Google TV
 ✅ TV Box Android (Digibox, Xiaomi Stick, X96 mini, etc)
 ✅ Smart TV con Android TV (Sony, TCL, Hisense, Xiaomi, Phillips con Android/Google TV)
 ✅ Telefono/Tablet Android
 ⛔ NO compatible con: Roku, Apple TV, Smart TV sin Android (Samsung Tizen, LG webOS)
+⛔ NO compatible con: Amazon Fire TV Stick 4K Select (modelo 2025) — este modelo usa sistema operativo Linux (Vega OS) en vez de Fire OS/Android, por lo que NO puede instalar nuestra app. Si el cliente tiene o planea comprar este modelo especifico, recomienda en su lugar el Fire TV Stick 4K o Fire TV Stick 4K Max que SI son compatibles.
 
 REGLA DE DISPOSITIVO INCOMPATIBLE: Si el cliente tiene un dispositivo NO compatible, NO lo dejes ir. Ofrece alternativas activas:
 1. "Tienes un celular o tablet Android? Puedes ver Wonder TV ahi mientras consigues un dispositivo compatible"
-2. Recomienda Fire TV Stick por ser el mas economico (~$25-35 USD) y facil de usar. Se consigue en Amazon, Mercado Libre o tiendas de electronica
+2. Recomienda Fire TV Stick 4K o Fire TV Stick 4K Max (NO el 4K Select 2025 que es Linux) por ser economico (~$25-35 USD) y facil de usar. Se consigue en Amazon, Mercado Libre o tiendas de electronica
 3. Si el cliente tiene TV con HDMI, el Fire Stick se conecta ahi y convierte cualquier TV en Smart TV
 4. NUNCA dejes que la conversacion muera por incompatibilidad sin ofrecer soluciones
+5. Si el cliente pregunta por el Fire TV Stick 4K Select (2025), confirma que ese modelo especifico NO es compatible porque usa Linux (Vega OS) en vez de Android. Recomienda el Fire TV Stick 4K o 4K Max en su lugar.
 
 === CANALES DESTACADOS (para cuando pregunten) ===
 
@@ -135,7 +138,14 @@ PROBLEMAS FRECUENTES Y SOLUCIONES:
 - "Se congela/buffering": Reiniciar dispositivo (desconectar 15-20 seg), limpiar cache dentro de la app (Ajustes > Limpiar cache), verificar conexion a internet
 - "No cargan canales": Limpiar cache, cerrar y reabrir app, verificar que la cuenta no este vencida
 - "App no abre/se cierra": Desinstalar y reinstalar la app usando Downloader con codigo {{DOWNLOADER_CODE}}
-- "Amazon bloquea la app" (Fire Stick): Desinstalar, reactivar opciones de desarrollador, reinstalar con Downloader
+- "Amazon bloquea la app" / "App desactivada" (Fire Stick): Este es un problema comun. Guia al cliente paso a paso:
+  1. Desinstalar la app FlujoTv actual del Fire TV
+  2. Desactivar actualizaciones automaticas: Configuracion > Aplicaciones > Appstore > Actualizaciones automaticas > Desactivado
+  3. Ajustar privacidad: Configuracion > Preferencias > Configuracion de privacidad. Desactivar las 3 opciones: Datos sobre el uso del dispositivo, Recopilar datos del uso de la app, y Anuncios basados en intereses
+  4. Abrir Downloader > seccion FILES > borrar todas las APK de la lista (boton 3 rayas del control > Borrar/Delete). La lista debe quedar vacia
+  5. En Downloader > seccion BROWSER > borrar la URL actual y escribir el codigo: {{DOWNLOADER_CODE}}
+  6. Cuando termine la descarga, presionar INSTALL / INSTALAR
+  7. Ir a Configuracion > Mi Fire TV > Opciones para desarrolladores > activar permisos para FlujoTv > reiniciar el Fire TV
 - "Codigo de Downloader no funciona": Verificar que escribieron el codigo en el CAMPO DE TEXTO/URL de la pantalla Home de Downloader (no en otro lugar). El codigo correcto es {{DOWNLOADER_CODE}}
 - "No puedo descargar en telefono": Transferir a WhatsApp para enviar el APK (este chat no puede enviar archivos)
 - "Pantalla negra": Cambiar de canal, limpiar cache, reiniciar app
@@ -181,6 +191,16 @@ IMPORTANTE: Solo incluye datos que el cliente REALMENTE haya dado. No inventes d
 10. Si no sabes algo, transfiere a WhatsApp con marcador [WHATSAPP:]
 11. Se breve y directa, maximo 2-3 parrafos cortos. NUNCA uses ** (markdown). Usa MAYUSCULAS para enfasis.
 12. NO pongas el marcador [WHATSAPP:...] en los primeros mensajes, solo cuando: el cliente ya pago, tiene un problema que no puedes resolver, o pide hablar con alguien
+
+=== COMPETENCIA (Magis TV, Xuper TV, etc.) ===
+
+Existen apps similares gratuitas como MAGIS TV y XUPER TV. Si el cliente las menciona o pregunta por ellas:
+- NO hables mal directamente, pero destaca las diferencias con profesionalismo
+- Esas apps son gratuitas pero tienen problemas frecuentes: se caen constantemente, los canales no cargan, no tienen soporte tecnico, la calidad de imagen es inferior, tienen publicidad invasiva, y pueden dejar de funcionar de un dia para otro sin aviso
+- Wonder TV (FLUJO) es un servicio PREMIUM con soporte directo por WhatsApp, calidad HD estable, actualizaciones constantes, 3 pantallas simultaneas y sin publicidad
+- Argumento clave: "Lo gratis sale caro. Con Wonder TV tienes calidad garantizada, soporte real y estabilidad por menos de $5 al mes. Muchos de nuestros clientes vienen de probar esas apps gratuitas y la diferencia es enorme"
+- Si el cliente dice que usa Magis/Xuper: "Entiendo, muchos clientes nos contactan despues de probar esas opciones. La diferencia la notas desde el primer dia: canales que siempre cargan, calidad HD, y si tienes algun problema nos escribes y te resolvemos al momento"
+- NUNCA digas que esas apps son ilegales o piratas (la nuestra tambien es IPTV). Solo enfocate en la CALIDAD y el SOPORTE como diferenciadores
 
 === TECNICAS DE VENTA ===
 
@@ -232,13 +252,16 @@ function getClient() {
   return new Anthropic({ apiKey: key })
 }
 
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
+
 async function getDownloaderCode(): Promise<string> {
   try {
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabase = getSupabase()
     const { data } = await supabase
       .from('app_settings')
       .select('value')
@@ -250,9 +273,72 @@ async function getDownloaderCode(): Promise<string> {
   }
 }
 
+async function saveConversation(
+  conversationId: string | null,
+  messages: { role: string; content: string }[],
+  transferred: boolean
+): Promise<string | null> {
+  try {
+    const supabase = getSupabase()
+
+    // ONLY extract lead data from USER messages to avoid capturing company info
+    const userText = messages.filter(m => m.role === 'user').map(m => m.content).join(' ')
+    const emailMatch = userText.match(/[\w.-]+@[\w.-]+\.\w+/)
+    const phoneMatch = userText.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/)
+    const nameMatch = userText.match(/(?:me llamo|soy|nombre[:\s]+)?([A-Z][a-záéíóúñ]+(?:\s[A-Z][a-záéíóúñ]+)+)/i)
+    // Detect plan from both user and bot (bot confirms the plan)
+    const fullText = messages.map(m => m.content).join(' ')
+    const planMatch = fullText.match(/(?:plan|quiero el|elegiste|perfecto.*plan)\s+(mensual|trimestral|semestral|anual)/i)
+
+    const data = {
+      messages,
+      lead_email: emailMatch?.[0] || null,
+      lead_phone: phoneMatch?.[0] || null,
+      lead_name: nameMatch?.[1] || null,
+      plan_interest: planMatch?.[1] || null,
+      transferred_to_whatsapp: transferred,
+      message_count: messages.length,
+      last_message_at: new Date().toISOString(),
+    }
+
+    if (conversationId) {
+      const { error } = await supabase
+        .from('chat_conversations')
+        .update(data)
+        .eq('id', conversationId)
+      if (error) console.error('Error updating conversation:', error)
+      return conversationId
+    } else {
+      const { data: row, error } = await supabase
+        .from('chat_conversations')
+        .insert(data)
+        .select('id')
+        .single()
+      if (error) console.error('Error inserting conversation:', error)
+      if (row) return row.id
+    }
+
+    // Also save lead if email or phone found
+    if (emailMatch || phoneMatch) {
+      await supabase.from('leads').upsert({
+        email: emailMatch?.[0] || null,
+        phone: phoneMatch?.[0] || null,
+        name: nameMatch?.[1] || null,
+        plan_interest: planMatch?.[1] || null,
+        source: 'chatbot-ai',
+      }, { onConflict: 'email' })
+    }
+
+    return null
+  } catch (err) {
+    console.error('saveConversation failed:', err)
+    return conversationId
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { messages } = await request.json()
+    const { messages, conversationId } = await request.json()
 
     if (!messages || !Array.isArray(messages)) {
       return Response.json({ error: 'messages requerido' }, { status: 400 })
@@ -278,7 +364,12 @@ export async function POST(request: NextRequest) {
     // Strip markdown bold markers that the model sometimes adds despite instructions
     text = text.replace(/\*\*/g, '')
 
-    return Response.json({ text })
+    // Save conversation server-side with service role key (bypasses RLS)
+    const allMessages = [...messages, { role: 'assistant', content: text }]
+    const hasTransfer = text.includes('[WHATSAPP:')
+    const newConversationId = await saveConversation(conversationId || null, allMessages, hasTransfer)
+
+    return Response.json({ text, conversationId: newConversationId })
   } catch (e) {
     console.error('Chat API error:', e)
     return Response.json(

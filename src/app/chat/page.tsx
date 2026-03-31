@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 
 const WA_NUMBER = '584248488722'
 const WA_LINK = `https://wa.me/${WA_NUMBER}`
@@ -20,62 +19,12 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const conversationId = useRef<string | null>(null)
-  const supabaseRef = useRef(createClient())
 
   const scrollToBottom = () => {
     setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
   }
 
   useEffect(scrollToBottom, [messages, loading])
-
-  // Save conversation to Supabase after each bot response
-  const saveConversation = async (msgs: Message[], transferred = false) => {
-    const supabase = supabaseRef.current
-    // ONLY extract lead data from USER messages to avoid capturing company info
-    const userText = msgs.filter(m => m.role === 'user').map(m => m.content).join(' ')
-    const emailMatch = userText.match(/[\w.-]+@[\w.-]+\.\w+/)
-    const phoneMatch = userText.match(/(?:\+?\d{1,3}[\s-]?)?\(?\d{3,4}\)?[\s.-]?\d{3,4}[\s.-]?\d{3,4}/)
-    const nameMatch = userText.match(/(?:me llamo|soy|nombre[:\s]+)?([A-Z][a-záéíóúñ]+(?:\s[A-Z][a-záéíóúñ]+)+)/i)
-    // Detect plan from both user and bot (bot confirms the plan)
-    const fullText = msgs.map(m => m.content).join(' ')
-    const planMatch = fullText.match(/(?:plan|quiero el|elegiste|perfecto.*plan)\s+(mensual|trimestral|semestral|anual)/i)
-
-    const data = {
-      messages: msgs,
-      lead_email: emailMatch?.[0] || null,
-      lead_phone: phoneMatch?.[0] || null,
-      lead_name: nameMatch?.[1] || null,
-      plan_interest: planMatch?.[1] || null,
-      transferred_to_whatsapp: transferred,
-      message_count: msgs.length,
-      last_message_at: new Date().toISOString(),
-    }
-
-    if (conversationId.current) {
-      await supabase
-        .from('chat_conversations')
-        .update(data)
-        .eq('id', conversationId.current)
-    } else {
-      const { data: row } = await supabase
-        .from('chat_conversations')
-        .insert(data)
-        .select('id')
-        .single()
-      if (row) conversationId.current = row.id
-    }
-
-    // Also save lead if email or phone found
-    if (emailMatch || phoneMatch) {
-      await supabase.from('leads').upsert({
-        email: emailMatch?.[0] || null,
-        phone: phoneMatch?.[0] || null,
-        name: nameMatch?.[1] || null,
-        plan_interest: planMatch?.[1] || null,
-        source: 'chatbot-ai',
-      }, { onConflict: 'email' }).then(() => {})
-    }
-  }
 
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim()
@@ -91,19 +40,17 @@ export default function ChatPage() {
       const resp = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessages, conversationId: conversationId.current }),
       })
       const data = await resp.json()
       const botReply = data.text || 'Disculpa, hubo un error. Puedes escribirnos por WhatsApp.'
       const finalMessages = [...newMessages, { role: 'assistant' as const, content: botReply }]
       setMessages(finalMessages)
 
-      const hasTransfer = botReply.includes('[WHATSAPP:')
-      saveConversation(finalMessages, hasTransfer)
+      // Server returns the conversation ID after saving
+      if (data.conversationId) conversationId.current = data.conversationId
     } catch {
-      const errorMessages = [...newMessages, { role: 'assistant' as const, content: 'Problema de conexion. Escribenos por WhatsApp al +58 424-8488722.' }]
-      setMessages(errorMessages)
-      saveConversation(errorMessages)
+      setMessages([...newMessages, { role: 'assistant' as const, content: 'Problema de conexion. Escribenos por WhatsApp al +58 424-8488722.' }])
     } finally {
       setLoading(false)
       setTimeout(() => inputRef.current?.focus(), 100)

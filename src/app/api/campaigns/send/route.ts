@@ -4,12 +4,15 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
+const DELAY_MS = 150 // Rate limit between emails
+const BATCH_TIME_LIMIT = 50000 // Stop 10s before Vercel's 60s timeout
+
 function getResend() {
   const key = process.env.RESEND_API_KEY
   if (!key) throw new Error('RESEND_API_KEY no configurado')
   return new Resend(key)
 }
-const FROM_EMAIL = process.env.FROM_EMAIL || 'WonderTV (FLUJO) <noreply@wondertv.live>'
+const FROM_EMAIL = process.env.FROM_EMAIL || 'Wonder TV <hola@wondertv.live>'
 
 function getSegmentQuery(segment: string) {
   const now = new Date()
@@ -30,6 +33,10 @@ function getSegmentQuery(segment: string) {
     default:
       return base
   }
+}
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }
 
 export async function POST(request: NextRequest) {
@@ -56,46 +63,112 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Campana no encontrada' }, { status: 404 })
   }
 
-  // Use custom recipients from frontend if provided, otherwise query by segment
+  // Determine recipients: first call gets them from request, continuation calls get remaining from DB
   let clients: { id?: string; name: string; email: string; flujo_login?: string; flujo_end_date?: string }[]
+  const isContinuation = campaign.status === 'sending'
 
-  if (customRecipients && Array.isArray(customRecipients) && customRecipients.length > 0) {
-    clients = customRecipients
-  } else {
-    let query = adminClient
-      .from('clients')
-      .select('id, name, email, flujo_login, flujo_end_date, status')
-      .not('email', 'is', null)
+  if (isContinuation) {
+    // Get emails already sent for this campaign
+    const { data: alreadySent } = await adminClient
+      .from('campaign_emails')
+      .select('email')
+      .eq('campaign_id', campaignId)
+    const sentEmails = new Set((alreadySent || []).map(e => e.email?.toLowerCase()))
 
-    if (campaign.segment === 'custom' && campaign.custom_client_ids?.length) {
-      query = query.in('id', campaign.custom_client_ids)
+    // Rebuild original recipient list and filter out already sent
+    if (customRecipients && Array.isArray(customRecipients) && customRecipients.length > 0) {
+      clients = customRecipients.filter((c: { email: string }) => !sentEmails.has(c.email?.toLowerCase()))
     } else {
-      const seg = getSegmentQuery(campaign.segment)
-      if (seg.status_filter) query = query.eq('status', seg.status_filter)
-      if (seg.date_from && seg.date_to) {
-        query = query.gte('flujo_end_date', seg.date_from).lte('flujo_end_date', seg.date_to)
+      let query = adminClient
+        .from('clients')
+        .select('id, name, email, flujo_login, flujo_end_date, status')
+        .not('email', 'is', null)
+
+      if (campaign.segment === 'custom' && campaign.custom_client_ids?.length) {
+        query = query.in('id', campaign.custom_client_ids)
+      } else {
+        const seg = getSegmentQuery(campaign.segment)
+        if (seg.status_filter) query = query.eq('status', seg.status_filter)
+        if (seg.date_from && seg.date_to) {
+          query = query.gte('flujo_end_date', seg.date_from).lte('flujo_end_date', seg.date_to)
+        }
       }
+
+      const { data } = await query
+      clients = (data || []).filter(c => !sentEmails.has(c.email?.toLowerCase()))
+    }
+  } else {
+    // First call
+    if (customRecipients && Array.isArray(customRecipients) && customRecipients.length > 0) {
+      clients = customRecipients
+    } else {
+      let query = adminClient
+        .from('clients')
+        .select('id, name, email, flujo_login, flujo_end_date, status')
+        .not('email', 'is', null)
+
+      if (campaign.segment === 'custom' && campaign.custom_client_ids?.length) {
+        query = query.in('id', campaign.custom_client_ids)
+      } else {
+        const seg = getSegmentQuery(campaign.segment)
+        if (seg.status_filter) query = query.eq('status', seg.status_filter)
+        if (seg.date_from && seg.date_to) {
+          query = query.gte('flujo_end_date', seg.date_from).lte('flujo_end_date', seg.date_to)
+        }
+      }
+
+      const { data } = await query
+      clients = data || []
     }
 
-    const { data } = await query
-    clients = data || []
+    if (clients.length === 0) {
+      return NextResponse.json({ error: 'No hay destinatarios' }, { status: 400 })
+    }
+
+    // Mark campaign as sending
+    await adminClient
+      .from('campaigns')
+      .update({ status: 'sending', total_recipients: clients.length, sent_count: 0, failed_count: 0 })
+      .eq('id', campaignId)
   }
 
+  // If no remaining clients, finalize
   if (clients.length === 0) {
-    return NextResponse.json({ error: 'No hay destinatarios' }, { status: 400 })
+    const { count: sentCount } = await adminClient
+      .from('campaign_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('campaign_id', campaignId)
+      .eq('status', 'sent')
+    const { count: failedCount } = await adminClient
+      .from('campaign_emails')
+      .select('*', { count: 'exact', head: true })
+      .eq('campaign_id', campaignId)
+      .eq('status', 'failed')
+
+    await adminClient
+      .from('campaigns')
+      .update({
+        status: (failedCount || 0) === campaign.total_recipients ? 'failed' : 'sent',
+        sent_count: sentCount || 0,
+        failed_count: failedCount || 0,
+        sent_at: new Date().toISOString(),
+      })
+      .eq('id', campaignId)
+
+    return NextResponse.json({ success: true, done: true, sentCount, failedCount })
   }
 
-  // Mark campaign as sending
-  await adminClient
-    .from('campaigns')
-    .update({ status: 'sending', total_recipients: clients.length })
-    .eq('id', campaignId)
+  // Send emails until time limit
+  const startTime = Date.now()
+  let sentCount = campaign.sent_count || 0
+  let failedCount = campaign.failed_count || 0
+  let processed = 0
 
-  let sentCount = 0
-  let failedCount = 0
+  for (let i = 0; i < clients.length; i++) {
+    // Check time limit
+    if (Date.now() - startTime > BATCH_TIME_LIMIT) break
 
-  for (const client of clients) {
-    // Replace template variables
+    const client = clients[i]
     const daysLeft = client.flujo_end_date
       ? Math.ceil((new Date(client.flujo_end_date as string).getTime() - Date.now()) / 86400000)
       : null
@@ -117,37 +190,72 @@ export async function POST(request: NextRequest) {
         to: client.email!,
         subject,
         html,
+        headers: {
+          'List-Unsubscribe': `<mailto:hola@wondertv.live?subject=Desuscribir%20${encodeURIComponent(client.email!)}>`,
+        },
       })
 
-      if (client.id) {
-        await adminClient.from('campaign_emails').insert({
-          campaign_id: campaignId,
-          client_id: client.id,
-          email: client.email,
-          status: emailError ? 'failed' : 'sent',
-          resend_id: emailResult?.id || null,
-          error_message: emailError?.message || null,
-        })
-      }
+      await adminClient.from('campaign_emails').insert({
+        campaign_id: campaignId,
+        client_id: client.id || null,
+        email: client.email,
+        status: emailError ? 'failed' : 'sent',
+        resend_id: emailResult?.id || null,
+        error_message: emailError?.message || null,
+      })
 
       if (emailError) failedCount++
       else sentCount++
     } catch (e) {
       failedCount++
-      if (client.id) {
-        await adminClient.from('campaign_emails').insert({
-          campaign_id: campaignId,
-          client_id: client.id,
-          email: client.email,
-          status: 'failed',
-          error_message: String(e),
-        })
-      }
+      await adminClient.from('campaign_emails').insert({
+        campaign_id: campaignId,
+        client_id: client.id || null,
+        email: client.email,
+        status: 'failed',
+        error_message: String(e),
+      })
+    }
+
+    processed++
+
+    // Update counts every 10 emails
+    if (processed % 10 === 0) {
+      await adminClient
+        .from('campaigns')
+        .update({ sent_count: sentCount, failed_count: failedCount })
+        .eq('id', campaignId)
+    }
+
+    // Rate limit
+    if (i < clients.length - 1 && Date.now() - startTime < BATCH_TIME_LIMIT) {
+      await sleep(DELAY_MS)
     }
   }
 
-  // Update campaign status
-  const finalStatus = failedCount === clients.length ? 'failed' : 'sent'
+  // Update counts after this batch
+  await adminClient
+    .from('campaigns')
+    .update({ sent_count: sentCount, failed_count: failedCount })
+    .eq('id', campaignId)
+
+  const remaining = clients.length - processed
+
+  if (remaining > 0) {
+    // More to send — tell frontend to call again
+    return NextResponse.json({
+      success: true,
+      done: false,
+      sentCount,
+      failedCount,
+      processed,
+      remaining,
+      total: campaign.total_recipients,
+    })
+  }
+
+  // All done
+  const finalStatus = failedCount === campaign.total_recipients ? 'failed' : 'sent'
   await adminClient
     .from('campaigns')
     .update({
@@ -160,8 +268,9 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
+    done: true,
     sentCount,
     failedCount,
-    total: clients.length,
+    total: campaign.total_recipients,
   })
 }

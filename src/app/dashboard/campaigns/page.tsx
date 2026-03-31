@@ -51,26 +51,91 @@ const EMAIL_FOOTER = `${CTA_BUTTON}
 <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
   <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV (FLUJO) &mdash; Tu entretenimiento sin l&iacute;mites</p>
   <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Este correo fue enviado a {email}</p>
+  <p style="margin:8px 0 0"><a href="mailto:hola@wondertv.live?subject=Desuscribir%20{email}" style="color:#d1d5db;font-size:10px;text-decoration:underline">Desuscribirme de estos correos</a></p>
 </div>`
 
 const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
   expiring: {
-    subject: '⚠️ {nombre}, tu servicio Wonder TV (FLUJO) vence pronto',
+    subject: '{nombre}, tu Wonder TV (FLUJO) está por vencer — renueva desde $4.97/mes',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
-    <h2 style="color:#1f2937;margin:0 0 12px">Hola {nombre} 👋</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu servicio de Wonder TV (FLUJO) <strong>vence en menos de {dias} d&iacute;as</strong>. No te quedes sin acceso a tus canales favoritos.</p>
-    <div style="background:#fef3c7;border-left:4px solid #f59e0b;border-radius:8px;padding:16px;margin:20px 0">
-      <p style="margin:0;color:#92400e;font-weight:bold;font-size:15px">&#128197; Renueva ahora y no pierdas ni un d&iacute;a</p>
+    <h2 style="color:#1f2937;margin:0 0 8px">{nombre}, &iexcl;tu servicio est&aacute; por vencer! &#9888;&#65039;</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 16px">Tu suscripci&oacute;n de Wonder TV (FLUJO) est&aacute; a punto de expirar. <strong>Si no renuevas, perder&aacute;s acceso a +1000 canales en vivo, series, pel&iacute;culas y todos los deportes.</strong></p>
+
+    <div style="background:linear-gradient(135deg,#fef2f2,#fee2e2);border-left:4px solid #ef4444;border-radius:8px;padding:16px;margin:20px 0">
+      <p style="margin:0;color:#991b1b;font-weight:bold;font-size:15px">&#128680; No te quedes sin tu entretenimiento &mdash; renueva ahora antes de que se desactive</p>
     </div>
-    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 0">Para renovar tu suscripci&oacute;n, escr&iacute;benos por WhatsApp y te atendemos al instante:</p>
+
+    <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:20px 0 12px;text-align:center">&#127873; Aprovecha nuestros precios especiales de renovaci&oacute;n:</p>
+
+    <!-- PRICING TABLE -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 20px">
+      <tr>
+        <td style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:12px;padding:18px">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <span style="background:#22c55e;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px">15% OFF</span>
+              <p style="margin:8px 0 2px;font-size:17px;font-weight:bold;color:#166534">Mensual</p>
+              <p style="margin:0;color:#4ade80;font-size:12px;text-decoration:line-through">$9.00</p>
+            </td>
+            <td style="text-align:right;vertical-align:middle">
+              <p style="margin:0;font-size:28px;font-weight:900;color:#166534">$7.65</p>
+              <p style="margin:0;color:#15803d;font-size:11px">por mes</p>
+            </td>
+          </tr></table>
+        </td>
+      </tr>
+      <tr><td style="height:8px"></td></tr>
+      <tr>
+        <td style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:12px;padding:18px">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <span style="background:#3b82f6;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px">&#11088; POPULAR</span>
+              <p style="margin:8px 0 2px;font-size:17px;font-weight:bold;color:#1e40af">Semestral &mdash; 6 + 1 MES GRATIS</p>
+              <p style="margin:0;color:#60a5fa;font-size:12px"><span style="text-decoration:line-through">$49.00</span></p>
+            </td>
+            <td style="text-align:right;vertical-align:middle">
+              <p style="margin:0;font-size:28px;font-weight:900;color:#1e40af">$39.20</p>
+              <p style="margin:0;color:#2563eb;font-size:11px">$5.60/mes &mdash; <strong>Ahorras 31%</strong></p>
+            </td>
+          </tr></table>
+        </td>
+      </tr>
+      <tr><td style="height:8px"></td></tr>
+      <tr>
+        <td style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);border:2px solid #c084fc;border-radius:12px;padding:18px">
+          <table width="100%" cellpadding="0" cellspacing="0"><tr>
+            <td>
+              <span style="background:#9333ea;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px">&#128526; MEJOR VALOR</span>
+              <p style="margin:8px 0 2px;font-size:17px;font-weight:bold;color:#6b21a8">Anual &mdash; 12 + 2 MESES GRATIS</p>
+              <p style="margin:0;color:#a855f7;font-size:12px"><span style="text-decoration:line-through">$87.00</span></p>
+            </td>
+            <td style="text-align:right;vertical-align:middle">
+              <p style="margin:0;font-size:28px;font-weight:900;color:#6b21a8">$69.60</p>
+              <p style="margin:0;color:#7c3aed;font-size:11px">$4.97/mes &mdash; <strong>Ahorras 31%</strong></p>
+            </td>
+          </tr></table>
+        </td>
+      </tr>
+    </table>
+
+    <div style="background:#f0fdf4;border:2px dashed #22c55e;border-radius:10px;padding:14px;text-align:center;margin:16px 0">
+      <p style="margin:0;color:#166534;font-size:15px"><strong>&#128161; Clientes que renuevan por m&aacute;s meses ahorran hasta un 31%</strong></p>
+      <p style="margin:6px 0 0;color:#15803d;font-size:13px">Tu cuenta se reactiva al instante. Sin esperas.</p>
+    </div>
+
+    <div style="background:#fefce8;border-left:4px solid #eab308;border-radius:8px;padding:14px;margin:16px 0">
+      <p style="margin:0;color:#854d0e;font-size:14px"><strong>&#9200; Renueva antes de que expire</strong> &mdash; evita perder tu historial y configuraci&oacute;n</p>
+    </div>
+
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 4px;text-align:center"><strong>&#128242; Escr&iacute;benos ahora para renovar en minutos:</strong></p>
     ${EMAIL_FOOTER}
   </div>
 </div>`,
   },
   reactivation: {
-    subject: '🔄 {nombre}, te extrañamos en Wonder TV (FLUJO)',
+    subject: '{nombre}, te extrañamos en Wonder TV (FLUJO)',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
@@ -85,7 +150,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   promotion: {
-    subject: '🚨 {nombre}, MEGA OFERTA Wonder TV (FLUJO) desde $4.97/mes - 900+ canales, series y peliculas al precio mas bajo del mercado!',
+    subject: '{nombre}, planes Wonder TV (FLUJO) desde $4.97/mes — 900+ canales en vivo, series y peliculas',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
@@ -176,7 +241,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   welcome: {
-    subject: '🎉 Bienvenido a Wonder TV (FLUJO), {nombre}!',
+    subject: 'Bienvenido a Wonder TV (FLUJO), {nombre}',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
@@ -211,12 +276,28 @@ export default function CampaignsPage() {
   const [confirmSend, setConfirmSend] = useState(false)
   const [editorTab, setEditorTab] = useState<string>('preview')
 
+  // Send progress
+  const [sendProgress, setSendProgress] = useState<{ sent: number; failed: number; total: number; percent: number; current?: number; lastEmail?: string } | null>(null)
+
   // Add recipients
   const [addName, setAddName] = useState('')
   const [addEmail, setAddEmail] = useState('')
   const [bulkEmails, setBulkEmails] = useState('')
 
+  const [failedLog, setFailedLog] = useState<{ email: string; error_message: string | null }[]>([])
+  const [failedCampaignId, setFailedCampaignId] = useState<string | null>(null)
+
   const supabase = useMemo(() => createClient(), [])
+
+  const showFailedLog = async (campaignId: string) => {
+    const { data } = await supabase
+      .from('campaign_emails')
+      .select('email, error_message')
+      .eq('campaign_id', campaignId)
+      .eq('status', 'failed')
+    setFailedLog(data || [])
+    setFailedCampaignId(campaignId)
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -358,21 +439,32 @@ export default function CampaignsPage() {
     toast.success('Destinatario agregado')
   }
 
-  const addBulkRecipients = () => {
-    const lines = bulkEmails.split(/[\n,;]+/).map(l => l.trim()).filter(Boolean)
+  const parseBulkLines = (text: string): { added: number; duplicates: number } => {
+    const lines = text.split(/\n/).map(l => l.trim()).filter(Boolean)
     const newRecipients: Recipient[] = []
     const existing = new Set(recipients.map(r => r.email.toLowerCase()))
     let duplicates = 0
 
     for (const line of lines) {
-      // Support formats: "email", "name <email>", "name,email", "name;email"
       let name = ''
       let email = ''
 
+      // Format: Name <email>
       const angleMatch = line.match(/^(.+?)\s*<(.+@.+)>$/)
+      // Format: name,email or name;email or name\temail (CSV/TSV)
+      const csvMatch = line.match(/^([^,;\t]+?)[,;\t]\s*(\S+@\S+)/)
+      // Format: email,name or email;name (reversed CSV)
+      const reverseCsvMatch = line.match(/^(\S+@\S+)[,;\t]\s*(.+)/)
+
       if (angleMatch) {
-        name = angleMatch[1].trim()
+        name = angleMatch[1].trim().replace(/^["']|["']$/g, '')
         email = angleMatch[2].trim()
+      } else if (csvMatch && !csvMatch[1].includes('@')) {
+        name = csvMatch[1].trim().replace(/^["']|["']$/g, '')
+        email = csvMatch[2].trim()
+      } else if (reverseCsvMatch) {
+        email = reverseCsvMatch[1].trim()
+        name = reverseCsvMatch[2].trim().replace(/^["']|["']$/g, '')
       } else if (line.includes('@')) {
         email = line.replace(/^["']|["']$/g, '').trim()
         name = email.split('@')[0]
@@ -386,21 +478,56 @@ export default function CampaignsPage() {
       }
 
       existing.add(email.toLowerCase())
-      newRecipients.push({ name, email })
+      newRecipients.push({ name: name || email.split('@')[0], email })
     }
 
     if (newRecipients.length > 0) {
       setRecipients(prev => [...prev, ...newRecipients])
+    }
+    return { added: newRecipients.length, duplicates }
+  }
+
+  const addBulkRecipients = () => {
+    const { added, duplicates } = parseBulkLines(bulkEmails)
+    if (added > 0) {
       setBulkEmails('')
-      toast.success(`${newRecipients.length} destinatarios agregados` + (duplicates > 0 ? `, ${duplicates} duplicados omitidos` : ''))
+      toast.success(`${added} destinatarios agregados` + (duplicates > 0 ? `, ${duplicates} duplicados omitidos` : ''))
     } else {
       toast.error(duplicates > 0 ? `${duplicates} emails ya estaban en la lista` : 'No se encontraron emails validos')
     }
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string
+      if (!text) return
+
+      // Skip header row if it looks like a CSV header
+      const lines = text.trim()
+      const firstLine = lines.split('\n')[0].toLowerCase()
+      const skipHeader = firstLine.includes('nombre') || firstLine.includes('name') || firstLine.includes('email') || firstLine.includes('correo')
+      const content = skipHeader ? lines.split('\n').slice(1).join('\n') : lines
+
+      const { added, duplicates } = parseBulkLines(content)
+      if (added > 0) {
+        toast.success(`${added} destinatarios cargados desde archivo` + (duplicates > 0 ? `, ${duplicates} duplicados omitidos` : ''))
+      } else {
+        toast.error(duplicates > 0 ? `${duplicates} emails ya estaban en la lista` : 'No se encontraron emails validos en el archivo')
+      }
+    }
+    reader.readAsText(file)
+    e.target.value = ''
+  }
+
   const handleSend = async () => {
     setConfirmSend(false)
     setSending(true)
+    const total = recipients.length
+    setSendProgress({ sent: 0, failed: 0, total, percent: 0 })
 
     const { data: campaign, error: createError } = await supabase
       .from('campaigns')
@@ -411,7 +538,7 @@ export default function CampaignsPage() {
         subject,
         html_content: htmlContent,
         segment,
-        total_recipients: recipients.length,
+        total_recipients: total,
         created_by: user?.id,
       })
       .select('id')
@@ -420,30 +547,56 @@ export default function CampaignsPage() {
     if (createError || !campaign) {
       toast.error('Error al crear campana: ' + createError?.message)
       setSending(false)
+      setSendProgress(null)
       return
     }
 
-    const resp = await fetch('/api/campaigns/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        campaignId: campaign.id,
-        customRecipients: recipients.map(r => ({ name: r.name, email: r.email })),
-      }),
-    })
+    const recipientList = recipients.map(r => ({ name: r.name, email: r.email }))
 
-    const result = await resp.json()
+    // Send in batches — the API auto-continues until done
+    const sendBatch = async () => {
+      try {
+        const resp = await fetch('/api/campaigns/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            campaignId: campaign.id,
+            customRecipients: recipientList,
+          }),
+        })
+        const result = await resp.json()
 
-    if (result.success) {
-      toast.success(`Campana enviada: ${result.sentCount} emails enviados` + (result.failedCount > 0 ? `, ${result.failedCount} fallidos` : ''))
-      const { data } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false }).limit(20)
-      if (data) setCampaigns(data)
-    } else {
-      toast.error('Error: ' + (result.error || 'desconocido'))
+        if (result.success) {
+          const sent = result.sentCount ?? 0
+          const failed = result.failedCount ?? 0
+          const processed = sent + failed
+          setSendProgress({ sent, failed, total, current: processed, percent: Math.round((processed / total) * 100) })
+
+          if (!result.done && result.remaining > 0) {
+            // More to send — call again
+            await sendBatch()
+          } else {
+            // Done
+            setSending(false)
+            setSendProgress(null)
+            toast.success(`Campana enviada: ${sent} emails enviados` + (failed > 0 ? `, ${failed} fallidos` : ''))
+            const { data: updated } = await supabase.from('campaigns').select('*').order('created_at', { ascending: false }).limit(20)
+            if (updated) setCampaigns(updated)
+            setPrepareType(null)
+          }
+        } else {
+          toast.error('Error: ' + (result.error || 'desconocido'))
+          setSending(false)
+          setSendProgress(null)
+        }
+      } catch (e) {
+        toast.error('Error de conexion: ' + String(e))
+        setSending(false)
+        setSendProgress(null)
+      }
     }
 
-    setSending(false)
-    setPrepareType(null)
+    await sendBatch()
   }
 
   if (loading) {
@@ -515,12 +668,12 @@ export default function CampaignsPage() {
               <div className="space-y-1.5">
                 <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Segmento base</Label>
                 <Select value={segment} onValueChange={(v) => handleSegmentChange(v as CampaignSegment)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)] w-auto max-w-[500px]">
                     {CAMPAIGN_SEGMENTS.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
+                      <SelectItem key={s.value} value={s.value} className="whitespace-nowrap">
                         {s.label} ({recipientCounts[s.value] ?? 0})
                       </SelectItem>
                     ))}
@@ -595,20 +748,27 @@ export default function CampaignsPage() {
                   </Button>
                 </div>
 
-                {/* Bulk paste */}
+                {/* Bulk paste + file upload */}
                 <div className="space-y-1.5">
                   <Textarea
-                    placeholder="Pega emails masivos aqui (uno por linea, separados por comas, o formato Nombre <email>)"
+                    placeholder={"Pega destinatarios (uno por linea):\nNombre, email@ejemplo.com\nemail@ejemplo.com\nNombre <email@ejemplo.com>"}
                     value={bulkEmails}
                     onChange={(e) => setBulkEmails(e.target.value)}
                     className="text-xs h-16 resize-none"
                   />
-                  {bulkEmails.trim() && (
-                    <Button size="sm" variant="outline" className="w-full h-7 text-xs" onClick={addBulkRecipients}>
-                      <Upload className="h-3 w-3 mr-1" />
-                      Agregar emails masivos
-                    </Button>
-                  )}
+                  <div className="flex gap-1.5">
+                    {bulkEmails.trim() && (
+                      <Button size="sm" variant="outline" className="flex-1 h-7 text-xs" onClick={addBulkRecipients}>
+                        <Upload className="h-3 w-3 mr-1" />
+                        Agregar pegados
+                      </Button>
+                    )}
+                    <label className={`inline-flex items-center justify-center gap-1 text-xs font-medium border rounded-md cursor-pointer hover:bg-gray-100 transition-colors h-7 px-3 ${bulkEmails.trim() ? '' : 'flex-1'}`}>
+                      <Upload className="h-3 w-3" />
+                      Cargar archivo CSV/TXT
+                      <input type="file" accept=".csv,.txt,.tsv" onChange={handleFileUpload} className="hidden" />
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -645,21 +805,42 @@ export default function CampaignsPage() {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t shrink-0 flex items-center justify-between bg-gray-50">
-            <p className="text-xs text-muted-foreground">
-              {recipients.length} email{recipients.length !== 1 ? 's' : ''} se enviaran con el asunto: <span className="font-medium text-gray-700">{subject.substring(0, 50)}{subject.length > 50 ? '...' : ''}</span>
-            </p>
-            <Button
-              className="bg-purple-600 hover:bg-purple-700 px-8"
-              disabled={sending || recipients.length === 0}
-              onClick={() => setConfirmSend(true)}
-            >
-              {sending ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Enviando...</>
-              ) : (
-                <><Send className="mr-2 h-4 w-4" />Enviar Campana</>
-              )}
-            </Button>
+          <div className="px-6 py-4 border-t shrink-0 bg-gray-50 space-y-3">
+            {sending && sendProgress ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-purple-800 font-medium flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enviando {sendProgress.current ?? 0} de {sendProgress.total}...
+                  </span>
+                  <span className="text-purple-600 font-bold">{sendProgress.percent}%</span>
+                </div>
+                <div className="h-3 rounded-full bg-purple-100 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-purple-600 transition-all duration-300"
+                    style={{ width: `${sendProgress.percent}%` }}
+                  />
+                </div>
+                <div className="flex gap-4 text-xs text-muted-foreground">
+                  <span className="text-green-600">{sendProgress.sent} enviados</span>
+                  {sendProgress.failed > 0 && <span className="text-red-600">{sendProgress.failed} fallidos</span>}
+                  {sendProgress.lastEmail && <span className="truncate">Ultimo: {sendProgress.lastEmail}</span>}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {recipients.length} email{recipients.length !== 1 ? 's' : ''} se enviaran con el asunto: <span className="font-medium text-gray-700">{subject.substring(0, 50)}{subject.length > 50 ? '...' : ''}</span>
+                </p>
+                <Button
+                  className="bg-purple-600 hover:bg-purple-700 px-8"
+                  disabled={sending || recipients.length === 0}
+                  onClick={() => setConfirmSend(true)}
+                >
+                  <Send className="mr-2 h-4 w-4" />Enviar Campana
+                </Button>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -682,6 +863,27 @@ export default function CampaignsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Failed emails log */}
+      <Dialog open={!!failedCampaignId} onOpenChange={(open) => !open && setFailedCampaignId(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Emails fallidos ({failedLog.length})</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[400px] overflow-y-auto space-y-2">
+            {failedLog.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No hay detalles de errores</p>
+            ) : (
+              failedLog.map((f, i) => (
+                <div key={i} className="p-3 rounded-lg border border-red-200 bg-red-50/50">
+                  <p className="text-sm font-medium">{f.email}</p>
+                  <p className="text-xs text-red-600 mt-1">{f.error_message || 'Error desconocido'}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Campaign history */}
       <Card>
@@ -723,7 +925,11 @@ export default function CampaignsPage() {
                         <TableCell className="text-right text-sm">{c.total_recipients}</TableCell>
                         <TableCell className="text-right text-sm">{c.sent_count}</TableCell>
                         <TableCell className="text-right text-sm">
-                          {c.failed_count > 0 ? <span className="text-red-600 font-medium">{c.failed_count}</span> : '0'}
+                          {c.failed_count > 0 ? (
+                            <button onClick={() => showFailedLog(c.id)} className="text-red-600 font-medium underline underline-offset-2 hover:text-red-800 cursor-pointer">
+                              {c.failed_count}
+                            </button>
+                          ) : '0'}
                         </TableCell>
                       </TableRow>
                     )

@@ -235,9 +235,31 @@ export default function DashboardPage() {
                 {completeSaleId && (
                   <CompleteSaleForm
                     assignment={pendingAssignments.find(a => a.id === completeSaleId)!}
-                    onComplete={() => {
+                    onComplete={async () => {
                       setCompleteSaleId(null)
                       setPendingAssignments(prev => prev.filter(a => a.id !== completeSaleId))
+                      // Refresh dashboard data
+                      const [balanceRes, allRes, summaryRes, profitRes, recentRes] = await Promise.all([
+                        supabase.from('credit_balance').select('*').maybeSingle(),
+                        supabase.from('credit_assignments').select('payment_method, payment_amount_usd, payment_amount_bss, is_courtesy, quantity, created_at'),
+                        supabase.from('monthly_financial_summary').select('*').limit(12),
+                        supabase.from('monthly_profitability').select('*').limit(12),
+                        supabase.from('credit_assignments').select('*, clients(name), profiles(full_name)').order('created_at', { ascending: false }).limit(10),
+                      ])
+                      if (balanceRes.data) setBalance(balanceRes.data)
+                      if (allRes.data) {
+                        setAllAssignments(allRes.data)
+                        const methodMap: Record<string, number> = {}
+                        allRes.data.forEach((a) => {
+                          if (a.payment_method && a.payment_amount_usd && !a.is_courtesy) {
+                            methodMap[a.payment_method] = (methodMap[a.payment_method] || 0) + a.payment_amount_usd
+                          }
+                        })
+                        setPaymentMethods(Object.entries(methodMap).map(([method, total]) => ({ method, total })))
+                      }
+                      if (summaryRes.data) setMonthlySummary(summaryRes.data)
+                      if (profitRes.data) setProfitability(profitRes.data)
+                      if (recentRes.data) setRecentAssignments(recentRes.data)
                     }}
                   />
                 )}

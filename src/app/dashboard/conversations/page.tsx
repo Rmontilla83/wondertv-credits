@@ -53,7 +53,7 @@ export default function ConversationsPage() {
       .from('chat_conversations')
       .select('*')
       .order('last_message_at', { ascending: false })
-      .limit(50)
+      .limit(500)
       .then(({ data }) => {
         if (data) setConversations(data)
         setLoading(false)
