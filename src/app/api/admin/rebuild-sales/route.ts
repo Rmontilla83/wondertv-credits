@@ -3,29 +3,25 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const dynamic = 'force-dynamic'
 
-// Las 10 ventas reales desde que teníamos 311 créditos hasta 302
+// 9 ventas: de 311 → 302 créditos
 const SALES = [
-  { login: 'henrryjose1808', qty: 1, date: '2026-03-27' },
-  { login: 'Trino29', qty: 1, date: '2026-03-28' },
-  { login: 'NANDAGON66', qty: 1, date: '2026-03-28' },
-  { login: 'Carlosm010', qty: 1, date: '2026-03-28' },
-  { login: 'Carlosm010', qty: 1, date: '2026-03-28' },
-  { login: 'Carlosm010', qty: 1, date: '2026-03-28' },
-  { login: 'Wondercesar', qty: 1, date: '2026-03-28' },
-  { login: 'mesch68', qty: 1, date: '2026-03-29' },
-  { login: 'radys04', qty: 1, date: '2026-03-31' },
-  { login: 'EMeinhard23', qty: 1, date: '2026-03-31' },
+  { login: 'Trino29',        qty: 1, date: '2026-03-28' },
+  { login: 'NANDAGON66',     qty: 1, date: '2026-03-28' },
+  { login: 'Carlosm010',     qty: 1, date: '2026-03-28' },
+  { login: 'Carlosm010',     qty: 1, date: '2026-03-28' },
+  { login: 'Carlosm010',     qty: 1, date: '2026-03-28' },
+  { login: 'Wondercesar',    qty: 1, date: '2026-03-28' },
+  { login: 'mesch68',        qty: 1, date: '2026-03-29' },
+  { login: 'radys04',        qty: 1, date: '2026-03-31' },
+  { login: 'EMeinhard23',    qty: 1, date: '2026-03-31' },
 ]
 
-export async function GET(request: NextRequest) {
-  // One-time endpoint, no auth needed
-
+export async function GET() {
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  // Get first admin for assigned_by
   const { data: admin } = await adminClient
     .from('profiles')
     .select('id')
@@ -34,17 +30,28 @@ export async function GET(request: NextRequest) {
     .single()
   const assignedBy = admin?.id || null
 
-  // 1. Delete ALL existing credit_assignments
-  const { error: deleteError, count: deleted } = await adminClient
+  // 1. Borrar todas las credit_assignments
+  const { count: deleted } = await adminClient
     .from('credit_assignments')
     .delete({ count: 'exact' })
     .gte('created_at', '1970-01-01')
 
-  if (deleteError) {
-    return NextResponse.json({ error: `Error eliminando ventas: ${deleteError.message}` }, { status: 500 })
-  }
+  // 2. Borrar credit_purchases y crear una sola de 311
+  await adminClient
+    .from('credit_purchases')
+    .delete()
+    .gte('created_at', '1970-01-01')
 
-  // 2. Map login → client_id
+  await adminClient
+    .from('credit_purchases')
+    .insert({
+      quantity: 311,
+      total_cost_usd: 0,
+      payment_method: 'transfer',
+      payment_reference: 'Balance inicial',
+    })
+
+  // 3. Mapear login → client_id
   const { data: clients } = await adminClient
     .from('clients')
     .select('id, flujo_login')
@@ -57,7 +64,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 3. Insert the 10 known sales
+  // 4. Insertar las 9 ventas pendientes
   let created = 0
   const errors: string[] = []
 
@@ -87,14 +94,18 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  // 5. Verificar balance final
+  const { data: balance } = await adminClient
+    .from('credit_balance')
+    .select('*')
+    .single()
+
   return NextResponse.json({
     success: true,
     deleted,
     created,
-    totalSales: SALES.length,
-    creditsBefore: 311,
-    creditsAfter: 311 - created,
+    balance: balance?.available_credits,
     errors: errors.length > 0 ? errors : undefined,
-    message: `Eliminadas ${deleted} ventas anteriores. Creadas ${created} ventas pendientes. Balance: 311 → ${311 - created} créditos.`,
+    message: `Eliminadas ${deleted} ventas. Creadas ${created} ventas pendientes. Balance: ${balance?.available_credits} créditos disponibles.`,
   })
 }
