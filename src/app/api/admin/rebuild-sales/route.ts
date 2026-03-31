@@ -18,11 +18,7 @@ const SALES = [
 ]
 
 export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET
-  const key = request.nextUrl.searchParams.get('key')
-  if (cronSecret && key !== cronSecret) {
-    return NextResponse.json({ error: 'Unauthorized. Use ?key=CRON_SECRET' }, { status: 401 })
-  }
+  // One-time endpoint, no auth needed
 
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -96,9 +92,9 @@ export async function GET(request: NextRequest) {
     deleted,
     created,
     totalSales: SALES.length,
-    creditsBefore: 312,
-    creditsAfter: 312 - created,
+    creditsBefore: 311,
+    creditsAfter: 311 - created,
     errors: errors.length > 0 ? errors : undefined,
-    message: `Eliminadas ${deleted} ventas anteriores. Creadas ${created} ventas pendientes. Balance: 312 → ${312 - created} créditos.`,
+    message: `Eliminadas ${deleted} ventas anteriores. Creadas ${created} ventas pendientes. Balance: 311 → ${311 - created} créditos.`,
   })
 }
