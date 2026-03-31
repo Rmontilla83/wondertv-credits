@@ -150,12 +150,12 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   promotion: {
-    subject: '{nombre}, planes Wonder TV (FLUJO) desde $4.97/mes — 900+ canales en vivo, series y peliculas',
+    subject: '{nombre}, descuento imbatible en Magis TV / Flujo TV desde $4.97/mes',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
     <h2 style="color:#1f2937;margin:0 0 8px">Hola {nombre} &#128075;</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px">Tenemos <strong>precios exclusivos</strong> en tu servicio de IPTV (FLUJO) con m&aacute;s de <strong>+1000 canales en vivo, series, pel&iacute;culas y deportes</strong>. &iexcl;Mira lo que tenemos para ti!</p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px">Tenemos <strong>precios exclusivos</strong> en tu servicio de Magis TV / Flujo TV con m&aacute;s de <strong>+1000 canales en vivo, series, pel&iacute;culas y deportes</strong>. &iexcl;Mira lo que tenemos para ti!</p>
 
     <!-- PRICING TABLE -->
     <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 20px">
@@ -165,7 +165,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <span style="background:#22c55e;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">15% OFF</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">IPTV (FLUJO) &mdash; Mensual</p>
+              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">Magis TV / Flujo TV &mdash; Mensual</p>
               <p style="margin:0;color:#4ade80;font-size:12px;text-decoration:line-through">$9.00/mes</p>
             </td>
             <td style="text-align:right;vertical-align:middle">
@@ -183,7 +183,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <span style="background:#22c55e;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">15% OFF</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">IPTV (FLUJO) &mdash; Trimestral</p>
+              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">Magis TV / Flujo TV &mdash; Trimestral</p>
               <p style="margin:0;color:#4ade80;font-size:12px"><span style="text-decoration:line-through">$27.00</span> &mdash; 3 meses</p>
             </td>
             <td style="text-align:right;vertical-align:middle">
@@ -201,7 +201,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <span style="background:#3b82f6;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">&#11088; POPULAR</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#1e40af">IPTV (FLUJO) &mdash; Semestral</p>
+              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#1e40af">Magis TV / Flujo TV &mdash; Semestral</p>
               <p style="margin:0;color:#60a5fa;font-size:12px"><span style="text-decoration:line-through">$49.00</span> &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
             </td>
             <td style="text-align:right;vertical-align:middle">
@@ -219,7 +219,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
           <table width="100%" cellpadding="0" cellspacing="0"><tr>
             <td>
               <span style="background:#9333ea;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">&#128526; MEJOR VALOR</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#6b21a8">IPTV (FLUJO) &mdash; Anual</p>
+              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#6b21a8">Magis TV / Flujo TV &mdash; Anual</p>
               <p style="margin:0;color:#a855f7;font-size:12px"><span style="text-decoration:line-through">$87.00</span> &mdash; 12 meses <strong>+ 2 MESES GRATIS</strong></p>
             </td>
             <td style="text-align:right;vertical-align:middle">
@@ -235,7 +235,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
       <p style="margin:0;color:#854d0e;font-size:14px"><strong>&#9200; Oferta por tiempo limitado</strong> &mdash; Aprovecha antes de que se acabe</p>
     </div>
 
-    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 4px;text-align:center"><strong>&#128242; Escr&iacute;benos por WhatsApp para contratar tu plan IPTV (FLUJO):</strong></p>
+    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 4px;text-align:center"><strong>&#128242; Escr&iacute;benos por WhatsApp para contratar tu plan Magis TV / Flujo TV:</strong></p>
     ${EMAIL_FOOTER}
   </div>
 </div>`,
