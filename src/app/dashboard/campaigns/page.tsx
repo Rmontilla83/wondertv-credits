@@ -51,7 +51,7 @@ function makeCTA(waMessage: string) {
 </div>`
 }
 const CTA_BUTTON = makeCTA('Hola, me interesa Wonder TV!')
-const PROMO_CTA = makeCTA('Hola! Vi la oferta de Wonder TV y quiero activar mi plan')
+const PROMO_CTA = makeCTA('Hola! Quiero activar mi Magis TV con Wonder TV')
 const EMAIL_HEADER = `<div style="text-align:center;padding:24px 20px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px 12px 0 0">
   <img src="${LOGO_URL}" alt="Wonder TV (FLUJO)" width="180" style="max-width:180px;height:auto" />
 </div>`
@@ -158,38 +158,42 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   promotion: {
-    subject: '{nombre}, \u00bfsigues pagando de m\u00e1s por ver TV?',
+    subject: '{nombre}, la Magis TV que todos tienen \u2014 activa la tuya desde $5.60/mes',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
-    <h2 style="color:#1f2937;margin:0 0 6px;font-size:22px">{nombre}, &iquest;sigues pagando $50+ de cable?</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px">Con <strong>Wonder TV</strong> tienes <strong>+1000 canales en vivo, series, pel&iacute;culas y TODOS los deportes</strong> desde tu celular, Smart TV o Fire Stick. Sin contratos, sin instalaciones.</p>
+    <h2 style="color:#1f2937;margin:0 0 6px;font-size:22px">{nombre}, &iquest;ya tienes tu Magis TV?</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 6px">Ya la conoces: <strong>Magis TV (ahora Flujo TV)</strong> es la app #1 de TV en vivo en Venezuela. +1000 canales, series, pel&iacute;culas y TODOS los deportes en HD.</p>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px"><strong>Wonder TV</strong> es tu forma m&aacute;s f&aacute;cil y segura de tenerla:</p>
+
+    <!-- Why Wonder TV -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px">
+      <tr>
+        <td style="padding:10px 0;color:#4b5563;font-size:14px;border-bottom:1px solid #f3f4f6">&#9989;&nbsp; <strong>Activaci&oacute;n inmediata</strong> &mdash; te la dejamos lista en minutos</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#4b5563;font-size:14px;border-bottom:1px solid #f3f4f6">&#9989;&nbsp; <strong>Soporte directo por WhatsApp</strong> &mdash; si algo falla, te ayudamos al instante</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#4b5563;font-size:14px;border-bottom:1px solid #f3f4f6">&#9989;&nbsp; <strong>3 pantallas simult&aacute;neas</strong> &mdash; celular, Smart TV y Fire Stick</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#4b5563;font-size:14px;border-bottom:1px solid #f3f4f6">&#9989;&nbsp; <strong>Sin anuncios, sin cortes</strong> &mdash; calidad HD estable</td>
+      </tr>
+      <tr>
+        <td style="padding:10px 0;color:#4b5563;font-size:14px">&#9989;&nbsp; <strong>Sin contratos</strong> &mdash; pagas solo lo que necesitas</td>
+      </tr>
+    </table>
 
     <!-- Social proof -->
     <div style="background:#f0fdf4;border-radius:10px;padding:14px;text-align:center;margin:0 0 20px">
-      <p style="margin:0;color:#166534;font-size:14px;font-weight:bold">&#10003; +900 familias ya disfrutan Wonder TV &mdash; 3 pantallas simult&aacute;neas, sin contratos</p>
+      <p style="margin:0;color:#166534;font-size:14px;font-weight:bold">&#128227; +900 familias en Venezuela, USA y Espa&ntilde;a ya disfrutan Magis TV con Wonder TV</p>
     </div>
-
-    <!-- Value props -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px">
-      <tr>
-        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128250;&nbsp; +1000 canales en vivo (deportes, cine, noticias, infantil)</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#127909;&nbsp; Series y pel&iacute;culas on-demand actualizadas</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128241;&nbsp; Funciona en celular, tablet, Smart TV y Fire Stick</td>
-      </tr>
-      <tr>
-        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128101;&nbsp; 3 pantallas al mismo tiempo &mdash; toda la familia</td>
-      </tr>
-    </table>
 
     <!-- Single featured plan: Semestral -->
     <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:3px solid #3b82f6;border-radius:16px;padding:24px;text-align:center;margin:0 0 12px">
       <span style="background:#3b82f6;color:white;font-size:11px;font-weight:bold;padding:5px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">&#11088; M&Aacute;S POPULAR</span>
-      <p style="margin:14px 0 2px;font-size:15px;color:#64748b">Plan Semestral &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
+      <p style="margin:14px 0 2px;font-size:15px;color:#64748b">Magis TV / Flujo TV &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
       <p style="margin:0;font-size:13px;color:#94a3b8;text-decoration:line-through">Antes: $49.00</p>
       <p style="margin:8px 0 2px;font-size:46px;font-weight:900;color:#1e40af;line-height:1">$39.20</p>
       <p style="margin:0;color:#2563eb;font-size:15px;font-weight:bold">Solo $5.60/mes &mdash; Ahorras 31%</p>
@@ -206,11 +210,11 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
         <td style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb"><strong>$15/mes</strong></td>
       </tr>
       <tr>
-        <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb">Cable tradicional</td>
-        <td style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb"><strong>$50-100/mes</strong></td>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb">Cable / Simple TV</td>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb"><strong>$20-50/mes</strong></td>
       </tr>
       <tr>
-        <td style="padding:12px 16px;font-size:14px;color:#1e40af;font-weight:bold">&#11088; Wonder TV</td>
+        <td style="padding:12px 16px;font-size:14px;color:#1e40af;font-weight:bold">&#11088; Magis TV con Wonder TV</td>
         <td style="padding:12px 16px;font-size:14px;color:#1e40af;text-align:right;font-weight:bold">$5.60/mes</td>
       </tr>
     </table>
@@ -225,7 +229,7 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 
     <!-- Footer -->
     <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
-      <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV (FLUJO) &mdash; Tu entretenimiento sin l&iacute;mites</p>
+      <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV &mdash; Tu distribuidor premium de Magis TV / Flujo TV</p>
       <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Enviado a {email}</p>
       <p style="margin:8px 0 0"><a href="mailto:hola@wondertv.live?subject=Desuscribir%20{email}" style="color:#d1d5db;font-size:10px;text-decoration:underline">Desuscribirme</a></p>
     </div>
