@@ -158,6 +158,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, done: true, sentCount, failedCount })
   }
 
+  // Calculate fecha_limite: next Sunday from today
+  const now = new Date()
+  const daysUntilSunday = (7 - now.getDay()) || 7
+  const nextSunday = new Date(now.getTime() + daysUntilSunday * 86400000)
+  const fechaLimite = nextSunday.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })
+
   // Send emails until time limit
   const startTime = Date.now()
   let sentCount = campaign.sent_count || 0
@@ -178,6 +184,7 @@ export async function POST(request: NextRequest) {
       .replace(/\{usuario\}/g, client.flujo_login || '')
       .replace(/\{dias\}/g, String(daysLeft ?? ''))
       .replace(/\{email\}/g, client.email || '')
+      .replace(/\{fecha_limite\}/g, fechaLimite)
 
     const subject = campaign.subject
       .replace(/\{nombre\}/g, client.name || 'Cliente')

@@ -38,12 +38,20 @@ const ICON_MAP: Record<string, typeof AlertTriangle> = {
 const LOGO_URL = 'https://www.wondertv.live/logo.png'
 const CHAT_URL = 'https://www.wondertv.live/chat'
 const WA_NUMBER = '584248488722'
-const CTA_BUTTON = `<div style="text-align:center;margin:28px 0 8px">
-  <a href="${CHAT_URL}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:18px;font-weight:bold;padding:16px 40px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(37,211,102,0.4)">
-    &#128172;&nbsp;&nbsp;Escr&iacute;benos ahora
+function makeCTA(waMessage: string) {
+  return `<div style="text-align:center;margin:28px 0 8px">
+  <a href="https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(waMessage)}" target="_blank" style="display:inline-block;background:#25D366;color:white;font-size:17px;font-weight:bold;padding:15px 36px;border-radius:50px;text-decoration:none;box-shadow:0 4px 15px rgba(37,211,102,0.4)">
+    &#128242;&nbsp;&nbsp;Activar por WhatsApp
   </a>
-  <p style="margin:10px 0 0;color:#6b7280;font-size:12px">Te respondemos al instante</p>
+  <p style="margin:16px 0 8px;color:#9ca3af;font-size:12px">&mdash;&mdash;&nbsp;&nbsp;o&nbsp;&nbsp;&mdash;&mdash;</p>
+  <a href="${CHAT_URL}" target="_blank" style="display:inline-block;background:linear-gradient(135deg,#7c3aed,#6366f1);color:white;font-size:14px;font-weight:bold;padding:12px 28px;border-radius:50px;text-decoration:none;box-shadow:0 4px 12px rgba(99,102,241,0.3)">
+    &#128172;&nbsp;&nbsp;M&aacute;s info con Valentina, nuestra asesora IA
+  </a>
+  <p style="margin:10px 0 0;color:#6b7280;font-size:12px">Te respondemos al instante &#9889;</p>
 </div>`
+}
+const CTA_BUTTON = makeCTA('Hola, me interesa Wonder TV!')
+const PROMO_CTA = makeCTA('Hola! Vi la oferta de Wonder TV y quiero activar mi plan')
 const EMAIL_HEADER = `<div style="text-align:center;padding:24px 20px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px 12px 0 0">
   <img src="${LOGO_URL}" alt="Wonder TV (FLUJO)" width="180" style="max-width:180px;height:auto" />
 </div>`
@@ -150,93 +158,77 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
 </div>`,
   },
   promotion: {
-    subject: '{nombre}, descuento imbatible en Magis TV / Flujo TV desde $4.97/mes',
+    subject: '{nombre}, \u00bfsigues pagando de m\u00e1s por ver TV?',
     html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08)">
   ${EMAIL_HEADER}
   <div style="padding:24px 28px 20px">
-    <h2 style="color:#1f2937;margin:0 0 8px">Hola {nombre} &#128075;</h2>
-    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px">Tenemos <strong>precios exclusivos</strong> en tu servicio de Magis TV / Flujo TV con m&aacute;s de <strong>+1000 canales en vivo, series, pel&iacute;culas y deportes</strong>. &iexcl;Mira lo que tenemos para ti!</p>
+    <h2 style="color:#1f2937;margin:0 0 6px;font-size:22px">{nombre}, &iquest;sigues pagando $50+ de cable?</h2>
+    <p style="color:#4b5563;font-size:16px;line-height:1.6;margin:0 0 20px">Con <strong>Wonder TV</strong> tienes <strong>+1000 canales en vivo, series, pel&iacute;culas y TODOS los deportes</strong> desde tu celular, Smart TV o Fire Stick. Sin contratos, sin instalaciones.</p>
 
-    <!-- PRICING TABLE -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 20px">
-      <!-- Plan Mensual -->
+    <!-- Social proof -->
+    <div style="background:#f0fdf4;border-radius:10px;padding:14px;text-align:center;margin:0 0 20px">
+      <p style="margin:0;color:#166534;font-size:14px;font-weight:bold">&#10003; +900 familias ya disfrutan Wonder TV &mdash; 3 pantallas simult&aacute;neas, sin contratos</p>
+    </div>
+
+    <!-- Value props -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px">
       <tr>
-        <td style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:12px;padding:18px;margin-bottom:10px">
-          <table width="100%" cellpadding="0" cellspacing="0"><tr>
-            <td>
-              <span style="background:#22c55e;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">15% OFF</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">Magis TV / Flujo TV &mdash; Mensual</p>
-              <p style="margin:0;color:#4ade80;font-size:12px;text-decoration:line-through">$9.00/mes</p>
-            </td>
-            <td style="text-align:right;vertical-align:middle">
-              <p style="margin:0;font-size:32px;font-weight:900;color:#166534">$7.65</p>
-              <p style="margin:0;color:#15803d;font-size:11px">por mes</p>
-            </td>
-          </tr></table>
-        </td>
+        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128250;&nbsp; +1000 canales en vivo (deportes, cine, noticias, infantil)</td>
       </tr>
-      <tr><td style="height:10px"></td></tr>
-
-      <!-- Plan Trimestral -->
       <tr>
-        <td style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:2px solid #86efac;border-radius:12px;padding:18px">
-          <table width="100%" cellpadding="0" cellspacing="0"><tr>
-            <td>
-              <span style="background:#22c55e;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">15% OFF</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#166534">Magis TV / Flujo TV &mdash; Trimestral</p>
-              <p style="margin:0;color:#4ade80;font-size:12px"><span style="text-decoration:line-through">$27.00</span> &mdash; 3 meses</p>
-            </td>
-            <td style="text-align:right;vertical-align:middle">
-              <p style="margin:0;font-size:32px;font-weight:900;color:#166534">$22.95</p>
-              <p style="margin:0;color:#15803d;font-size:11px">$7.65/mes</p>
-            </td>
-          </tr></table>
-        </td>
+        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#127909;&nbsp; Series y pel&iacute;culas on-demand actualizadas</td>
       </tr>
-      <tr><td style="height:10px"></td></tr>
-
-      <!-- Plan Semestral -->
       <tr>
-        <td style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:2px solid #93c5fd;border-radius:12px;padding:18px;position:relative">
-          <table width="100%" cellpadding="0" cellspacing="0"><tr>
-            <td>
-              <span style="background:#3b82f6;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">&#11088; POPULAR</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#1e40af">Magis TV / Flujo TV &mdash; Semestral</p>
-              <p style="margin:0;color:#60a5fa;font-size:12px"><span style="text-decoration:line-through">$49.00</span> &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
-            </td>
-            <td style="text-align:right;vertical-align:middle">
-              <p style="margin:0;font-size:32px;font-weight:900;color:#1e40af">$39.20</p>
-              <p style="margin:0;color:#2563eb;font-size:11px">$5.60/mes &mdash; <strong>Ahorras 31%</strong></p>
-            </td>
-          </tr></table>
-        </td>
+        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128241;&nbsp; Funciona en celular, tablet, Smart TV y Fire Stick</td>
       </tr>
-      <tr><td style="height:10px"></td></tr>
-
-      <!-- Plan Anual -->
       <tr>
-        <td style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);border:2px solid #c084fc;border-radius:12px;padding:18px">
-          <table width="100%" cellpadding="0" cellspacing="0"><tr>
-            <td>
-              <span style="background:#9333ea;color:white;font-size:10px;font-weight:bold;padding:3px 8px;border-radius:20px;text-transform:uppercase">&#128526; MEJOR VALOR</span>
-              <p style="margin:8px 0 2px;font-size:18px;font-weight:bold;color:#6b21a8">Magis TV / Flujo TV &mdash; Anual</p>
-              <p style="margin:0;color:#a855f7;font-size:12px"><span style="text-decoration:line-through">$87.00</span> &mdash; 12 meses <strong>+ 2 MESES GRATIS</strong></p>
-            </td>
-            <td style="text-align:right;vertical-align:middle">
-              <p style="margin:0;font-size:32px;font-weight:900;color:#6b21a8">$69.60</p>
-              <p style="margin:0;color:#7c3aed;font-size:11px">$4.97/mes &mdash; <strong>Ahorras 31%</strong></p>
-            </td>
-          </tr></table>
-        </td>
+        <td style="padding:8px 0;color:#4b5563;font-size:14px">&#128101;&nbsp; 3 pantallas al mismo tiempo &mdash; toda la familia</td>
       </tr>
     </table>
 
-    <div style="background:#fefce8;border-left:4px solid #eab308;border-radius:8px;padding:14px;margin:16px 0">
-      <p style="margin:0;color:#854d0e;font-size:14px"><strong>&#9200; Oferta por tiempo limitado</strong> &mdash; Aprovecha antes de que se acabe</p>
+    <!-- Single featured plan: Semestral -->
+    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:3px solid #3b82f6;border-radius:16px;padding:24px;text-align:center;margin:0 0 12px">
+      <span style="background:#3b82f6;color:white;font-size:11px;font-weight:bold;padding:5px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">&#11088; M&Aacute;S POPULAR</span>
+      <p style="margin:14px 0 2px;font-size:15px;color:#64748b">Plan Semestral &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
+      <p style="margin:0;font-size:13px;color:#94a3b8;text-decoration:line-through">Antes: $49.00</p>
+      <p style="margin:8px 0 2px;font-size:46px;font-weight:900;color:#1e40af;line-height:1">$39.20</p>
+      <p style="margin:0;color:#2563eb;font-size:15px;font-weight:bold">Solo $5.60/mes &mdash; Ahorras 31%</p>
     </div>
 
-    <p style="color:#4b5563;font-size:15px;line-height:1.5;margin:16px 0 4px;text-align:center"><strong>&#128242; Escr&iacute;benos por WhatsApp para contratar tu plan Magis TV / Flujo TV:</strong></p>
-    ${EMAIL_FOOTER}
+    <p style="text-align:center;margin:0 0 20px">
+      <a href="${CHAT_URL}" style="color:#6366f1;font-size:13px;text-decoration:underline">Ver todos nuestros planes &rarr;</a>
+    </p>
+
+    <!-- Comparison -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:10px;padding:2px;margin:0 0 20px">
+      <tr>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb">Netflix b&aacute;sico</td>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb"><strong>$15/mes</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;border-bottom:1px solid #e5e7eb">Cable tradicional</td>
+        <td style="padding:12px 16px;font-size:13px;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb"><strong>$50-100/mes</strong></td>
+      </tr>
+      <tr>
+        <td style="padding:12px 16px;font-size:14px;color:#1e40af;font-weight:bold">&#11088; Wonder TV</td>
+        <td style="padding:12px 16px;font-size:14px;color:#1e40af;text-align:right;font-weight:bold">$5.60/mes</td>
+      </tr>
+    </table>
+
+    <!-- Urgency -->
+    <div style="background:#fefce8;border-left:4px solid #eab308;border-radius:8px;padding:14px;margin:0 0 24px">
+      <p style="margin:0;color:#854d0e;font-size:14px;font-weight:bold">&#9200; Esta oferta vence el {fecha_limite} &mdash; despu&eacute;s vuelve al precio regular</p>
+    </div>
+
+    <!-- Dual CTA -->
+    ${PROMO_CTA}
+
+    <!-- Footer -->
+    <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:16px;text-align:center">
+      <p style="color:#9ca3af;font-size:11px;margin:0">Wonder TV (FLUJO) &mdash; Tu entretenimiento sin l&iacute;mites</p>
+      <p style="color:#d1d5db;font-size:10px;margin:4px 0 0">Enviado a {email}</p>
+      <p style="margin:8px 0 0"><a href="mailto:hola@wondertv.live?subject=Desuscribir%20{email}" style="color:#d1d5db;font-size:10px;text-decoration:underline">Desuscribirme</a></p>
+    </div>
   </div>
 </div>`,
   },
