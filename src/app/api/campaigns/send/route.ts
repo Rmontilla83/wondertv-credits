@@ -68,6 +68,17 @@ export async function POST(request: NextRequest) {
   const isContinuation = campaign.status === 'sending'
 
   if (isContinuation) {
+    // Safety check: stop if we already reached total_recipients
+    const totalTarget = campaign.total_recipients || 0
+    const alreadyProcessed = (campaign.sent_count || 0) + (campaign.failed_count || 0)
+    if (totalTarget > 0 && alreadyProcessed >= totalTarget) {
+      await adminClient
+        .from('campaigns')
+        .update({ status: 'sent', sent_at: new Date().toISOString() })
+        .eq('id', campaignId)
+      return NextResponse.json({ success: true, done: true, sentCount: campaign.sent_count, failedCount: campaign.failed_count, total: totalTarget })
+    }
+
     // Get emails already sent for this campaign
     const { data: alreadySent } = await adminClient
       .from('campaign_emails')
@@ -96,6 +107,14 @@ export async function POST(request: NextRequest) {
 
       const { data } = await query
       clients = (data || []).filter(c => !sentEmails.has(c.email?.toLowerCase()))
+    }
+
+    // Cap remaining recipients to never exceed total_recipients
+    if (totalTarget > 0) {
+      const maxRemaining = totalTarget - sentEmails.size
+      if (clients.length > maxRemaining) {
+        clients = clients.slice(0, Math.max(0, maxRemaining))
+      }
     }
   } else {
     // First call
@@ -170,9 +189,14 @@ export async function POST(request: NextRequest) {
   let failedCount = campaign.failed_count || 0
   let processed = 0
 
+  const totalTarget = campaign.total_recipients || clients.length
+
   for (let i = 0; i < clients.length; i++) {
     // Check time limit
     if (Date.now() - startTime > BATCH_TIME_LIMIT) break
+
+    // Safety: stop if we've reached the intended total
+    if (sentCount + failedCount >= totalTarget) break
 
     const client = clients[i]
     const daysLeft = client.flujo_end_date
