@@ -190,8 +190,9 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
       <p style="margin:0;color:#166534;font-size:14px;font-weight:bold">&#128227; +900 familias en Venezuela, USA y Espa&ntilde;a ya disfrutan Magis TV con Wonder TV</p>
     </div>
 
-    <!-- Single featured plan: Semestral -->
-    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:3px solid #3b82f6;border-radius:16px;padding:24px;text-align:center;margin:0 0 12px">
+    <!-- Featured plan: Semestral -->
+    <p style="color:#1f2937;font-size:16px;font-weight:bold;margin:0 0 12px;text-align:center">Tenemos planes desde 1 mes hasta 1 a&ntilde;o:</p>
+    <div style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:3px solid #3b82f6;border-radius:16px;padding:24px;text-align:center;margin:0 0 10px">
       <span style="background:#3b82f6;color:white;font-size:11px;font-weight:bold;padding:5px 14px;border-radius:20px;text-transform:uppercase;letter-spacing:0.5px">&#11088; M&Aacute;S POPULAR</span>
       <p style="margin:14px 0 2px;font-size:15px;color:#64748b">Magis TV / Flujo TV &mdash; 6 meses <strong>+ 1 MES GRATIS</strong></p>
       <p style="margin:0;font-size:13px;color:#94a3b8;text-decoration:line-through">Antes: $49.00</p>
@@ -199,8 +200,24 @@ const EMAIL_TEMPLATES: Record<string, { subject: string; html: string }> = {
       <p style="margin:0;color:#2563eb;font-size:15px;font-weight:bold">Solo $5.60/mes &mdash; Ahorras 31%</p>
     </div>
 
+    <!-- Other plans summary -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 8px">
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;background:#f9fafb;border-radius:8px 8px 0 0;border-bottom:1px solid #e5e7eb">&#128197; Mensual</td>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;text-align:right;background:#f9fafb;border-radius:8px 8px 0 0;border-bottom:1px solid #e5e7eb"><strong>$7.65</strong>/mes <span style="color:#94a3b8;font-size:11px;text-decoration:line-through">$9.00</span></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;background:#f9fafb;border-bottom:1px solid #e5e7eb">&#128197; Trimestral</td>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;text-align:right;background:#f9fafb;border-bottom:1px solid #e5e7eb"><strong>$22.95</strong> <span style="color:#94a3b8;font-size:11px;text-decoration:line-through">$27.00</span></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;background:#f9fafb;border-radius:0 0 8px 8px">&#128197; Anual <span style="color:#9333ea;font-size:11px;font-weight:bold">+2 GRATIS</span></td>
+        <td style="padding:8px 12px;font-size:13px;color:#4b5563;text-align:right;background:#f9fafb;border-radius:0 0 8px 8px"><strong>$69.60</strong> <span style="color:#94a3b8;font-size:11px;text-decoration:line-through">$87.00</span></td>
+      </tr>
+    </table>
+
     <p style="text-align:center;margin:0 0 20px">
-      <a href="${CHAT_URL}" style="color:#6366f1;font-size:13px;text-decoration:underline">Ver todos nuestros planes &rarr;</a>
+      <a href="${CHAT_URL}" style="color:#6366f1;font-size:13px;text-decoration:underline">Preg&uacute;ntale a Valentina cu&aacute;l plan te conviene &rarr;</a>
     </p>
 
     <!-- Comparison -->
