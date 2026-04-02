@@ -81,7 +81,7 @@ Agente IA de ventas powered by Claude Haiku 4.5. Pagina publica sin auth.
 Envio de emails via Resend con 4 tipos predefinidos:
 - **Recordatorio de vencimiento**: clientes por vencer (plantilla persuasiva con tabla de precios, sin mencionar dias especificos)
 - **Reactivacion**: clientes inactivos/expirados
-- **Promocion/Ventas**: tabla de precios visual con los 4 planes IPTV (FLUJO)
+- **Promocion/Ventas**: lidera con marca Magis TV/Flujo TV (reconocimiento), plan semestral destacado + resumen compacto de los 4 planes, social proof, comparacion vs cable/Netflix, urgencia con fecha limite dinamica (proximo domingo)
 - **Bienvenida**: nuevos clientes
 
 Editor full-page (95vw) con:
@@ -89,7 +89,7 @@ Editor full-page (95vw) con:
 - Panel derecho: destinatarios editables, agregar individual, pegado masivo (soporta nombre,email / email,nombre / Nombre \<email\>), carga de archivo CSV/TXT
 - Segmento "Vacio" para campanas a listas externas sin destinatarios pre-cargados
 - Segmento "Leads del Chatbot" para prospectos que dejaron email en Valentina pero no son clientes aun (excluye automaticamente los que ya se convirtieron)
-- Templates con logo Wonder TV, boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp)
+- Templates con dual CTA: boton verde WhatsApp directo (wa.me con mensaje pre-escrito) + boton purpura "Mas info con Valentina, nuestra asesora IA" → /chat
 - URLs de emails apuntan a wondertv.live (dominio real, no vercel.app)
 - **Envio por lotes**: el API envia en lotes de ~50s para respetar el timeout de Vercel (60s). El frontend llama automaticamente al siguiente lote. Rate limit de 150ms entre emails
 - **Barra de progreso**: muestra emails enviados/fallidos/total en tiempo real durante el envio
@@ -213,7 +213,8 @@ La tabla de clientes tiene 5 filtros: Todos (azul), Activos (verde), Inactivos (
 - Chatbot: NO usa markdown ** (texto plano, MAYUSCULAS para enfasis)
 - Chatbot: transfiere a WhatsApp SOLO cuando el cliente ya pago o pide humano. NO antes.
 - Chatbot: codigo Downloader se lee de app_settings en cada request (configurable desde Settings)
-- Emails: boton verde unico "Escribenos ahora" → /chat (no expone WhatsApp directamente)
+- Emails: dual CTA en todos los templates — boton verde WhatsApp directo (wa.me + mensaje pre-escrito por tipo) + boton purpura Valentina IA (/chat). Promo usa mensaje WA especifico de Magis TV
+- Emails promo: liderar con marca Magis TV/Flujo TV (reconocimiento en Venezuela), Wonder TV como distribuidor premium. Subject de curiosidad, no venta directa. {fecha_limite} = proximo domingo calculado dinamicamente en send route
 - WhatsApp del operador: +58 424-8488722 (solo se revela via el chatbot tras recopilar datos)
 - Logos: usar width/height reales de la imagen fuente (640x640 para logo.png, 180x180 para logo-small.png), controlar tamaño visual con CSS classes (w-36, w-32, etc). No inventar dimensiones o se pixela.
 - Settings: solo gestion de usuarios + codigo Downloader (tasa de cambio eliminada, se ingresa directo en formulario de venta)
